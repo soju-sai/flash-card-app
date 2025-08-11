@@ -1,0 +1,61 @@
+---
+alwaysApply: true
+description: shadcn/ui component usage guide for the flash-card-app project
+---
+
+# shadcn/ui Component Usage Guide
+
+This project **MUST** use shadcn/ui for all UI components. Do not create custom UI components when shadcn/ui alternatives exist.
+
+## Installation Status
+
+If shadcn/ui is not yet installed in the project, use this command to initialize it:
+```bash
+npx shadcn@latest init
+```
+
+## Adding Components
+
+When you need shadcn/ui components that are not yet installed, use the following command pattern:
+```bash
+npx shadcn@latest add [component-name]
+```
+
+Examples:
+- `npx shadcn@latest add button`
+- `npx shadcn@latest add card`
+- `npx shadcn@latest add input`
+- `npx shadcn@latest add dialog`
+
+## Component Usage Rules
+
+1. **Always check** if a shadcn/ui component exists before creating custom components
+2. **Import from** the components/ui directory after installation
+3. **Customize** shadcn/ui components using Tailwind CSS classes when needed
+4. **Reference** the official shadcn/ui documentation for proper usage
+
+## Common Components Reference
+
+Key shadcn/ui components frequently used in applications:
+- Button: For interactive actions
+- Card: For content containers
+- Input: For form inputs
+- Dialog: For modals and overlays
+- Badge: For status indicators
+- Avatar: For user profiles
+- Tooltip: For helpful hints
+- Select: For dropdown selections
+- Checkbox: For boolean inputs
+- Textarea: For multi-line text input
+
+## File Structure
+
+After initialization, shadcn/ui components will be located in:
+- `src/components/ui/` - Generated shadcn/ui components
+- `src/lib/utils.ts` - Utility functions for shadcn/ui
+
+## Integration Notes
+
+- shadcn/ui works seamlessly with Tailwind CSS (already configured in [package.json](mdc:package.json))
+- Components are fully customizable and can be modified after installation
+- TypeScript support is included by default
