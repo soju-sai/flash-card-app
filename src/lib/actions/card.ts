@@ -43,7 +43,7 @@ export async function createCard(formData: FormData) {
     
     revalidatePath('/dashboard');
     revalidatePath(`/deck/${validatedData.deckId}`);
-  } catch (error) {
+  } catch {
     throw new Error('Failed to create card');
   }
 }
@@ -84,7 +84,7 @@ export async function updateCard(formData: FormData) {
       
     revalidatePath('/dashboard');
     revalidatePath(`/deck/${cardWithDeck[0].deckId}`);
-  } catch (error) {
+  } catch {
     throw new Error('Failed to update card');
   }
 }
@@ -122,7 +122,7 @@ export async function deleteCard(formData: FormData) {
       
     revalidatePath('/dashboard');
     revalidatePath(`/deck/${cardWithDeck[0].deckId}`);
-  } catch (error) {
+  } catch {
     throw new Error('Failed to delete card');
   }
 }

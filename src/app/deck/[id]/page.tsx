@@ -13,9 +13,9 @@ import { ArrowLeft, Edit, Plus, Play } from 'lucide-react';
 import Link from 'next/link';
 
 interface DeckPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function DeckPage({ params }: DeckPageProps) {
@@ -26,7 +26,8 @@ export default async function DeckPage({ params }: DeckPageProps) {
     redirect('/');
   }
 
-  const deckId = parseInt(params.id);
+  const { id } = await params;
+  const deckId = parseInt(id);
   
   if (isNaN(deckId)) {
     notFound();
@@ -83,7 +84,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
             
             <div className="flex items-center gap-2">
               {cards.length > 0 && (
-                <Link href={`/study/${deck.id}`}>
+                <Link href={`/decks/${deck.id}/study`}>
                   <Button>
                     <Play className="w-4 h-4 mr-2" />
                     Study

@@ -36,8 +36,8 @@ export async function createDeck(formData: FormData) {
     
     // Handle Zod validation errors
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
-      const zodError = error as any;
-      const errorMessages = zodError.errors?.map((err: any) => 
+      const zodError = error as { errors?: Array<{ path: string[]; message: string }> };
+      const errorMessages = zodError.errors?.map((err) => 
         `${err.path.join('.')}: ${err.message}`
       ).join(', ') || 'Invalid form data';
       throw new Error(`Validation failed: ${errorMessages}`);
@@ -84,7 +84,7 @@ export async function updateDeck(formData: FormData) {
       ));
       
     revalidatePath('/dashboard');
-  } catch (error) {
+  } catch {
     throw new Error('Failed to update deck');
   }
 }
@@ -109,7 +109,7 @@ export async function deleteDeck(formData: FormData) {
       ));
       
     revalidatePath('/dashboard');
-  } catch (error) {
+  } catch {
     throw new Error('Failed to delete deck');
   }
 }
