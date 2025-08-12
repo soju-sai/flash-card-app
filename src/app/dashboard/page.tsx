@@ -12,7 +12,7 @@ export default async function DashboardPage() {
   const { userId } = await auth();
   
   if (!userId) {
-    redirect('/sign-in');
+    redirect('/');
   }
 
   // Fetch user's decks with card counts
