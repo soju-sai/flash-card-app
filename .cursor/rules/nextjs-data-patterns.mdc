@@ -1,0 +1,390 @@
+---
+alwaysApply: true
+---
+
+# Next.js Data Flow and Validation Rule
+
+**CRITICAL**: This project MUST follow strict patterns for data flow, validation, and type safety. All data operations must use the appropriate Next.js patterns with comprehensive validation.
+
+## Core Principles
+
+1. **Data Retrieval**: Server Components ONLY
+2. **Data Mutations**: Server Actions ONLY  
+3. **Validation**: Zod schemas for ALL server-side data
+4. **Type Safety**: TypeScript types for ALL data structures
+
+## Required Dependencies
+
+Ensure these packages are installed:
+```bash
+npm install zod
+npm install @types/zod  # If needed for TypeScript support
+```
+
+## Data Retrieval Pattern
+
+### ✅ CORRECT: Server Components for Data Fetching
+
+```typescript
+// src/app/decks/page.tsx
+import { auth } from '@clerk/nextjs/server';
+import { db } from '@/lib/db';
+import { decksTable } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+
+export default async function DecksPage() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    redirect('/sign-in');
+  }
+  
+  // Data fetching in Server Component
+  const userDecks = await db.select()
+    .from(decksTable)
+    .where(eq(decksTable.userId, userId));
+    
+  return (
+    <div>
+      {userDecks.map(deck => (
+        <DeckCard key={deck.id} deck={deck} />
+      ))}
+    </div>
+  );
+}
+```
+
+### ❌ FORBIDDEN: Client-side Data Fetching
+
+```typescript
+// ❌ Never do this in Client Components
+'use client';
+import { useEffect, useState } from 'react';
+
+export default function DecksPage() {
+  const [decks, setDecks] = useState([]);
+  
+  useEffect(() => {
+    // ❌ No fetch() in client components
+    fetch('/api/decks').then(res => res.json()).then(setDecks);
+  }, []);
+  
+  return <div>...</div>;
+}
+```
+
+## Data Validation Pattern
+
+### Required Zod Schema Structure
+
+Create validation schemas in `src/lib/validations/` directory:
+
+```typescript
+// src/lib/validations/deck.ts
+import { z } from 'zod';
+
+// TypeScript type derived from database schema
+export type Deck = typeof decksTable.$inferSelect;
+export type NewDeck = typeof decksTable.$inferInsert;
+
+// Zod validation schemas
+export const createDeckSchema = z.object({
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(255, 'Title must be less than 255 characters'),
+  description: z.string()
+    .max(1000, 'Description must be less than 1000 characters')
+    .optional(),
+});
+
+export const updateDeckSchema = z.object({
+  id: z.number().positive('Invalid deck ID'),
+  title: z.string()
+    .min(1, 'Title is required')
+    .max(255, 'Title must be less than 255 characters')
+    .optional(),
+  description: z.string()
+    .max(1000, 'Description must be less than 1000 characters')
+    .optional(),
+});
+
+export const deleteDeckSchema = z.object({
+  id: z.number().positive('Invalid deck ID'),
+});
+
+// Export types for use in components
+export type CreateDeckInput = z.infer<typeof createDeckSchema>;
+export type UpdateDeckInput = z.infer<typeof updateDeckSchema>;
+export type DeleteDeckInput = z.infer<typeof deleteDeckSchema>;
+```
+
+### ✅ CORRECT: Server Actions with Validation
+
+```typescript
+// src/lib/actions/deck.ts
+'use server';
+
+import { auth } from '@clerk/nextjs/server';
+import { db } from '@/lib/db';
+import { decksTable } from '@/db/schema';
+import { createDeckSchema, updateDeckSchema, deleteDeckSchema } from '@/lib/validations/deck';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { eq, and } from 'drizzle-orm';
+
+export async function createDeck(formData: FormData) {
+  // Authentication check
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  // Extract and validate data
+  const rawData = {
+    title: formData.get('title'),
+    description: formData.get('description'),
+  };
+  
+  // Zod validation with TypeScript types
+  const validatedData = createDeckSchema.parse(rawData);
+  
+  try {
+    // Database operation with validated data
+    await db.insert(decksTable).values({
+      ...validatedData,
+      userId, // Always include authenticated user ID
+    });
+    
+    revalidatePath('/decks');
+    redirect('/decks');
+  } catch (error) {
+    throw new Error('Failed to create deck');
+  }
+}
+
+export async function updateDeck(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  const rawData = {
+    id: Number(formData.get('id')),
+    title: formData.get('title'),
+    description: formData.get('description'),
+  };
+  
+  const validatedData = updateDeckSchema.parse(rawData);
+  
+  try {
+    await db.update(decksTable)
+      .set(validatedData)
+      .where(and(
+        eq(decksTable.id, validatedData.id),
+        eq(decksTable.userId, userId) // Ensure user owns the deck
+      ));
+      
+    revalidatePath('/decks');
+  } catch (error) {
+    throw new Error('Failed to update deck');
+  }
+}
+
+export async function deleteDeck(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  const rawData = {
+    id: Number(formData.get('id')),
+  };
+  
+  const validatedData = deleteDeckSchema.parse(rawData);
+  
+  try {
+    await db.delete(decksTable)
+      .where(and(
+        eq(decksTable.id, validatedData.id),
+        eq(decksTable.userId, userId)
+      ));
+      
+    revalidatePath('/decks');
+  } catch (error) {
+    throw new Error('Failed to delete deck');
+  }
+}
+```
+
+### ✅ CORRECT: Client Component with Server Actions
+
+```typescript
+// src/components/DeckForm.tsx
+'use client';
+
+import { createDeck } from '@/lib/actions/deck';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+
+export function DeckForm() {
+  return (
+    <form action={createDeck}>
+      <div>
+        <label htmlFor="title">Title</label>
+        <Input 
+          id="title" 
+          name="title" 
+          required 
+          maxLength={255}
+        />
+      </div>
+      
+      <div>
+        <label htmlFor="description">Description</label>
+        <Textarea 
+          id="description" 
+          name="description" 
+          maxLength={1000}
+        />
+      </div>
+      
+      <Button type="submit">Create Deck</Button>
+    </form>
+  );
+}
+```
+
+## File Organization
+
+### Required Directory Structure
+
+```
+src/
+├── lib/
+│   ├── actions/           # Server Actions grouped by entity
+│   │   ├── deck.ts
+│   │   └── card.ts
+│   └── validations/       # Zod schemas grouped by entity
+│       ├── deck.ts
+│       └── card.ts
+├── components/           # Client Components
+└── app/                 # Server Components (pages)
+```
+
+## Type Safety Requirements
+
+### 1. Database Schema Types
+
+```typescript
+// Always use Drizzle inferred types
+import { decksTable, cardsTable } from '@/db/schema';
+
+export type Deck = typeof decksTable.$inferSelect;
+export type NewDeck = typeof decksTable.$inferInsert;
+export type Card = typeof cardsTable.$inferSelect;
+export type NewCard = typeof cardsTable.$inferInsert;
+```
+
+### 2. Validation Schema Types
+
+```typescript
+// Always derive types from Zod schemas
+export type CreateDeckInput = z.infer<typeof createDeckSchema>;
+export type UpdateDeckInput = z.infer<typeof updateDeckSchema>;
+```
+
+### 3. Component Props Types
+
+```typescript
+// Use database types for component props
+interface DeckCardProps {
+  deck: Deck;
+}
+
+interface DeckFormProps {
+  initialData?: Partial<Deck>;
+}
+```
+
+## Error Handling Pattern
+
+### Server Actions Error Handling
+
+```typescript
+export async function serverAction(formData: FormData) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+    
+    const validatedData = schema.parse(/* ... */);
+    
+    // Database operation
+    await db./* ... */;
+    
+    revalidatePath('/path');
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      // Handle validation errors
+      throw new Error(`Validation failed: ${error.message}`);
+    }
+    
+    // Handle other errors
+    console.error('Server action failed:', error);
+    throw new Error('Operation failed');
+  }
+}
+```
+
+## Forbidden Patterns
+
+### ❌ API Routes for Data Mutations
+
+```typescript
+// ❌ Never create API routes for data mutations
+// src/app/api/decks/route.ts
+export async function POST(request: Request) {
+  // This pattern is forbidden - use Server Actions instead
+}
+```
+
+### ❌ Unvalidated Data in Server Actions
+
+```typescript
+// ❌ Never use raw form data without validation
+export async function badServerAction(formData: FormData) {
+  const title = formData.get('title'); // No validation
+  
+  await db.insert(decksTable).values({
+    title, // Unvalidated data
+  });
+}
+```
+
+### ❌ Client-Side State for Server Data
+
+```typescript
+// ❌ Never manage server state in client components
+'use client';
+export function BadComponent() {
+  const [decks, setDecks] = useState([]); // Should be in Server Component
+  // ...
+}
+```
+
+## Integration Checklist
+
+Before implementing any data operation:
+
+1. ✅ Data retrieval via Server Components
+2. ✅ Data mutations via Server Actions
+3. ✅ Zod validation schema created
+4. ✅ TypeScript types derived from schema
+5. ✅ Authentication check included
+6. ✅ User data isolation enforced
+7. ✅ Error handling implemented
+8. ✅ `revalidatePath()` called after mutations
+
+This pattern ensures type safety, data validation, and follows Next.js best practices for optimal performance and security.

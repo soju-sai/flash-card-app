@@ -1,0 +1,260 @@
+---
+alwaysApply: true
+---
+
+# Clerk Authentication and Data Security Rule
+
+**CRITICAL**: All protected routes and data access in this project MUST enforce Clerk authentication and user data isolation. Users can ONLY access their own data.
+
+## Authentication Configuration
+
+- **Auth Provider**: Clerk is configured as the primary authentication provider
+- **Middleware**: Authentication checks are handled in [src/middleware.ts](mdc:src/middleware.ts)
+- **User Context**: Always use Clerk's user context for data filtering
+
+## Required Import Patterns
+
+### Server Components and API Routes:
+```typescript
+import { auth } from '@clerk/nextjs/server';
+```
+
+### Client Components:
+```typescript
+import { useUser } from '@clerk/nextjs';
+```
+
+## Mandatory Security Rules
+
+### 1. Authentication Check
+- ✅ **ALWAYS**: Check user authentication before data access
+- ❌ **NEVER**: Allow unauthenticated access to user data
+
+```typescript
+// Server Components/API Routes
+const { userId } = await auth();
+if (!userId) {
+  return redirect('/sign-in');
+  // or throw new Error('Unauthorized');
+}
+
+// Client Components
+const { user, isSignedIn } = useUser();
+if (!isSignedIn) {
+  return <div>Please sign in</div>;
+}
+```
+
+### 2. Data Isolation
+- ✅ **ALWAYS**: Filter queries by `userId` from Clerk
+- ❌ **NEVER**: Return data without user filtering
+
+```typescript
+// Correct: Filter by authenticated user
+const userDecks = await db.select()
+  .from(decksTable)
+  .where(eq(decksTable.userId, userId));
+
+// Forbidden: Unfiltered data access
+const allDecks = await db.select().from(decksTable); // ❌ NEVER DO THIS
+```
+
+### 3. Database Schema Requirements
+- All user-owned tables MUST include a `userId` field
+- `userId` should be of type `text` and reference Clerk's user ID
+- Always include `userId` in WHERE clauses for user data
+
+### 4. API Route Protection
+All API routes that handle user data MUST follow this pattern:
+
+```typescript
+import { auth } from '@clerk/nextjs/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET/POST/PUT/DELETE(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // Your protected logic here
+    // Always filter by userId when accessing database
+    
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+}
+```
+
+### 5. Server Actions Protection
+All Server Actions MUST include authentication:
+
+```typescript
+import { auth } from '@clerk/nextjs/server';
+import { revalidatePath } from 'next/cache';
+
+export async function createDeck(formData: FormData) {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  // Extract data and include userId
+  const deckData = {
+    name: formData.get('name') as string,
+    userId, // Always include userId
+  };
+  
+  await db.insert(decksTable).values(deckData);
+  revalidatePath('/decks');
+}
+```
+
+### 6. Page Protection Patterns
+
+#### Server Components:
+```typescript
+import { auth } from '@clerk/nextjs/server';
+import { redirect } from 'next/navigation';
+
+export default async function ProtectedPage() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    redirect('/sign-in');
+  }
+  
+  // Fetch user-specific data
+  const userDecks = await db.select()
+    .from(decksTable)
+    .where(eq(decksTable.userId, userId));
+    
+  return <div>{/* Your protected content */}</div>;
+}
+```
+
+#### Client Components:
+```typescript
+'use client';
+import { useUser } from '@clerk/nextjs';
+
+export default function ProtectedComponent() {
+  const { user, isSignedIn, isLoaded } = useUser();
+  
+  if (!isLoaded) {
+    return <div>Loading...</div>;
+  }
+  
+  if (!isSignedIn) {
+    return <div>Please sign in to access this content.</div>;
+  }
+  
+  return <div>{/* Your protected content */}</div>;
+}
+```
+
+## Data Access Security Checklist
+
+Before implementing any data operation, verify:
+
+1. ✅ User is authenticated via Clerk
+2. ✅ Database query includes `userId` filter
+3. ✅ No data leakage between users
+4. ✅ Proper error handling for unauthorized access
+5. ✅ Type safety with Drizzle ORM (per [.cursor/rules/drizzle-orm-mandatory.mdc](mdc:.cursor/rules/drizzle-orm-mandatory.mdc))
+
+## Forbidden Patterns
+
+```typescript
+// ❌ NEVER: Unfiltered data access
+const allUserData = await db.select().from(decksTable);
+
+// ❌ NEVER: Hardcoded user IDs
+const userDecks = await db.select()
+  .from(decksTable)
+  .where(eq(decksTable.userId, 'hardcoded-id'));
+
+// ❌ NEVER: Skipping auth checks
+async function getData() {
+  // Missing auth check
+  return await db.select().from(decksTable);
+}
+
+// ❌ NEVER: Client-side only protection
+function ProtectedComponent() {
+  // Client-side only check - can be bypassed
+  if (typeof window !== 'undefined' && !localStorage.getItem('user')) {
+    return <div>Not authorized</div>;
+  }
+}
+```
+
+## Integration with Drizzle ORM
+
+When using Drizzle ORM (per project requirements), always combine authentication with proper data filtering:
+
+```typescript
+import { db } from '@/lib/db';
+import { decksTable, cardsTable } from '@/db/schema';
+import { auth } from '@clerk/nextjs/server';
+import { eq, and } from 'drizzle-orm';
+
+// Correct pattern: Auth + Drizzle + User filtering
+export async function getUserDecks() {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  return await db.select()
+    .from(decksTable)
+    .where(eq(decksTable.userId, userId));
+}
+
+// For related data, ensure both tables are filtered
+export async function getDeckWithCards(deckId: string) {
+  const { userId } = await auth();
+  
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+  
+  return await db.select()
+    .from(decksTable)
+    .leftJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
+    .where(and(
+      eq(decksTable.id, deckId),
+      eq(decksTable.userId, userId) // Ensure deck belongs to user
+    ));
+}
+```
+
+## Error Handling
+
+Always provide appropriate error responses for authentication failures:
+
+```typescript
+// API Routes
+if (!userId) {
+  return NextResponse.json(
+    { error: 'Authentication required' }, 
+    { status: 401 }
+  );
+}
+
+// Server Actions
+if (!userId) {
+  throw new Error('You must be signed in to perform this action');
+}
+
+// Server Components
+if (!userId) {
+  redirect('/sign-in');
+}
+```
+
+This rule ensures that all user data remains secure and properly isolated within the flash card application using Clerk authentication.

@@ -1,0 +1,112 @@
+---
+alwaysApply: true
+description: "Enforce mandatory use of Drizzle ORM for all database operations"
+---
+
+# Drizzle ORM Mandatory Usage Rule
+
+**CRITICAL**: All database operations in this project MUST be handled exclusively through Drizzle ORM. No direct SQL queries or other database libraries are permitted.
+
+## Database Configuration
+
+- **Database Client**: Use the configured db instance from [src/lib/db.ts](mdc:src/lib/db.ts)
+- **Schema**: All table definitions are in [src/db/schema.ts](mdc:src/db/schema.ts)
+- **Configuration**: Drizzle configuration is in [drizzle.config.ts](mdc:drizzle.config.ts)
+
+## Required Import Pattern
+
+```typescript
+import { db } from '@/lib/db';
+import { decksTable, cardsTable } from '@/db/schema';
+```
+
+## Mandatory Usage Rules
+
+### 1. SELECT Operations
+- ✅ **ALWAYS USE**: `db.select().from(tableName)`
+- ❌ **NEVER USE**: Raw SQL queries, other ORMs, or direct database connections
+
+### 2. INSERT Operations
+- ✅ **ALWAYS USE**: `db.insert(tableName).values(data)`
+- ❌ **NEVER USE**: Raw INSERT statements
+
+### 3. UPDATE Operations
+- ✅ **ALWAYS USE**: `db.update(tableName).set(data).where(condition)`
+- ❌ **NEVER USE**: Raw UPDATE statements
+
+### 4. DELETE Operations
+- ✅ **ALWAYS USE**: `db.delete(tableName).where(condition)`
+- ❌ **NEVER USE**: Raw DELETE statements
+
+### 5. Complex Queries
+- ✅ **ALWAYS USE**: Drizzle's query builder with `.leftJoin()`, `.where()`, `.orderBy()`, etc.
+- ❌ **NEVER USE**: Raw SQL with JOINs
+
+### 6. Transactions
+- ✅ **ALWAYS USE**: `db.transaction(async (tx) => { ... })`
+- ❌ **NEVER USE**: Manual transaction handling
+
+## Available Tables
+
+Current schema includes:
+- `decksTable` - Flashcard decks with relations to cards
+- `cardsTable` - Individual flashcards with relation to decks
+
+## Type Safety
+
+- Always use TypeScript with Drizzle's inferred types
+- Leverage the schema relations defined in [src/db/schema.ts](mdc:src/db/schema.ts)
+- Use `typeof tableName.$inferSelect` and `typeof tableName.$inferInsert` for type definitions
+
+## Example Patterns
+
+### Correct Usage:
+```typescript
+// Select all decks for a user
+const userDecks = await db.select().from(decksTable).where(eq(decksTable.userId, userId));
+
+// Insert a new card
+await db.insert(cardsTable).values({
+  deckId: 1,
+  frontSide: "Question",
+  backSide: "Answer"
+});
+
+// Update with relations
+const deckWithCards = await db.select().from(decksTable)
+  .leftJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
+  .where(eq(decksTable.id, deckId));
+```
+
+### Forbidden Patterns:
+```typescript
+// ❌ Never do this
+const result = await sql`SELECT * FROM decks WHERE user_id = ${userId}`;
+// ❌ Never do this  
+const result = await someOtherORM.query('SELECT ...');
+// ❌ Never do this
+const result = await fetch('/api/raw-sql', { ... });
+```
+
+## Migration and Schema Changes
+
+- All schema changes must be made in [src/db/schema.ts](mdc:src/db/schema.ts)
+- Use `npm run db:generate` to create migrations
+- Use `npm run db:migrate` to apply migrations
+- Never modify database structure outside of Drizzle migrations
+
+## Error Handling
+
+Always wrap Drizzle operations in try-catch blocks and handle database errors appropriately:
+
+```typescript
+try {
+  const result = await db.select().from(decksTable);
+  return result;
+} catch (error) {
+  console.error('Database operation failed:', error);
+  throw new Error('Failed to fetch decks');
+}
+```
+
+This rule ensures data consistency, type safety, and maintainable database operations throughout the flash card application.
