@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { decksTable, cardsTable } from '@/db/schema';
-import { eq, count } from 'drizzle-orm';
+import { eq, count, desc } from 'drizzle-orm';
 import { DeckCard } from '@/components/DeckCard';
 import { CreateDeckDialog } from '@/components/CreateDeckDialog';
 
@@ -29,7 +29,7 @@ export default async function DashboardPage() {
     .leftJoin(cardsTable, eq(decksTable.id, cardsTable.deckId))
     .where(eq(decksTable.userId, userId))
     .groupBy(decksTable.id)
-    .orderBy(decksTable.updatedAt);
+    .orderBy(desc(decksTable.updatedAt));
 
   // Calculate deck count for display
   const totalDecks = userDecksWithCounts.length;
