@@ -8,6 +8,7 @@ import {
   SignedOut,
   UserButton,
 } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -40,8 +41,12 @@ export default function RootLayout({
                 </div>
                 <div className="flex items-center space-x-4">
                   <SignedOut>
-                    <SignInButton />
-                    <SignUpButton />
+                    <SignInButton>
+                      <Button variant="outline">Sign In</Button>
+                    </SignInButton>
+                    <SignUpButton>
+                      <Button>Sign Up</Button>
+                    </SignUpButton>
                   </SignedOut>
                   <SignedIn>
                     <UserButton />
