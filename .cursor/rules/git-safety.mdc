@@ -1,0 +1,107 @@
+---
+alwaysApply: true
+description: Git safety rules to prevent automatic commits and updates
+---
+
+# Git Safety Rules - 自動提交與更新禁止規則
+
+**CRITICAL**: This project has STRICT rules regarding git operations. The AI assistant MUST follow these rules at all times.
+
+## 🚫 FORBIDDEN Git Operations (嚴格禁止的 Git 操作)
+
+The following git commands are **ABSOLUTELY FORBIDDEN** without explicit user approval:
+
+### 1. Commit Operations (提交操作)
+- `git commit` - Any form of committing changes
+- `git commit -m` - Committing with message
+- `git commit -am` - Add and commit
+- `git commit --amend` - Amending commits
+
+### 2. Push/Pull Operations (推送/拉取操作)
+- `git push` - Pushing to remote repository
+- `git push origin` - Pushing to origin
+- `git push --force` - Force pushing
+- `git pull` - Pulling from remote
+- `git fetch` - Fetching from remote
+
+### 3. Branch Operations (分支操作)
+- `git merge` - Merging branches
+- `git rebase` - Rebasing branches
+- `git checkout -b` - Creating new branches
+- `git branch -d` - Deleting branches
+
+### 4. Repository State Changes (倉庫狀態變更)
+- `git add .` - Adding all changes to staging
+- `git add` - Adding specific files to staging
+- `git reset` - Resetting changes
+- `git stash` - Stashing changes
+- `git cherry-pick` - Cherry picking commits
+
+## ✅ ALLOWED Git Operations (允許的 Git 操作)
+
+The following **READ-ONLY** git commands are permitted for information gathering:
+
+### 1. Status and Information (狀態與資訊查詢)
+- `git status` - Check repository status
+- `git log` - View commit history
+- `git log --oneline` - View compact commit history
+- `git branch` - List branches
+- `git branch -a` - List all branches including remote
+
+### 2. Diff and Comparison (差異比較)
+- `git diff` - Show differences
+- `git diff --cached` - Show staged differences
+- `git show` - Show commit details
+
+### 3. Configuration Queries (配置查詢)
+- `git config --list` - Show git configuration
+- `git remote -v` - Show remote repositories
+
+## 🔒 Required User Approval Process (必需的用戶批准流程)
+
+Before executing ANY forbidden git operation:
+
+1. **MUST** explicitly ask the user for permission
+2. **MUST** explain what the command will do
+3. **MUST** wait for explicit user confirmation
+4. **MUST** use the exact command the user approves
+
+### Example Approval Request (批准請求範例)
+
+```
+I need to commit these changes. The command I want to run is:
+git commit -m "feat: add new feature"
+
+This will:
+- Create a new commit with the staged changes
+- Add the commit message "feat: add new feature"
+
+Do you want me to proceed with this commit? (Yes/No)
+```
+
+## ⚠️ Violation Consequences (違規後果)
+
+If the AI assistant violates these rules:
+- **IMMEDIATELY STOP** the current operation
+- **EXPLAIN** what rule was violated
+- **ASK** for explicit user guidance before proceeding
+
+## 🎯 Best Practices (最佳實踐)
+
+1. **Always ask before git operations** - 在 git 操作前總是詢問
+2. **Use read-only commands freely** - 自由使用唯讀指令
+3. **Explain the impact** - 解釋操作的影響
+4. **Get explicit confirmation** - 獲得明確確認
+5. **Respect user decisions** - 尊重用戶決定
+
+## 📝 Notes (注意事項)
+
+- This rule applies to ALL git operations, regardless of the development context
+- 此規則適用於所有 git 操作，無論開發情境如何
+- When in doubt, ask the user first
+- 有疑問時，先詢問用戶
+- Safety first, convenience second
+- 安全第一，便利第二
+
+Remember: **NEVER execute git commands that modify the repository state without explicit user permission.**
+記住：**未經用戶明確許可，絕不執行修改倉庫狀態的 git 指令。**
