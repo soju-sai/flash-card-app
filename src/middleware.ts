@@ -5,10 +5,18 @@ const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
 ]);
 
+const isRootRoute = createRouteMatcher(['/']);
+
 export default clerkMiddleware(async (auth, req) => {
+  const authData = await auth();
+  
+  // Redirect authenticated users from root page to dashboard
+  if (isRootRoute(req) && authData.userId) {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+  
   // Protect dashboard routes
   if (isProtectedRoute(req)) {
-    const authData = await auth();
     if (!authData.userId) {
       // Redirect unauthenticated users to home page
       return NextResponse.redirect(new URL('/', req.url));

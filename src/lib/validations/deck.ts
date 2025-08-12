@@ -12,7 +12,9 @@ export const createDeckSchema = z.object({
     .max(255, 'Title must be less than 255 characters'),
   description: z.string()
     .max(1000, 'Description must be less than 1000 characters')
-    .optional(),
+    .optional()
+    .nullable()
+    .transform(val => val === '' ? null : val),
 });
 
 export const updateDeckSchema = z.object({

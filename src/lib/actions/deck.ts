@@ -15,27 +15,50 @@ export async function createDeck(formData: FormData) {
     throw new Error('Unauthorized');
   }
   
-  // Extract and validate data
-  const rawData = {
-    title: formData.get('title'),
-    description: formData.get('description'),
-  };
-  
-  // Zod validation with TypeScript types
-  const validatedData = createDeckSchema.parse(rawData);
-  
   try {
+    // Extract and validate data
+    const rawData = {
+      title: formData.get('title'),
+      description: formData.get('description'),
+    };
+    
+    // Zod validation with TypeScript types
+    const validatedData = createDeckSchema.parse(rawData);
+    
     // Database operation with validated data
     await db.insert(decksTable).values({
       ...validatedData,
       userId, // Always include authenticated user ID
     });
     
-    revalidatePath('/dashboard');
-    redirect('/dashboard');
   } catch (error) {
-    throw new Error('Failed to create deck');
+    console.error('Create deck error:', error);
+    
+    // Handle Zod validation errors
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      const zodError = error as any;
+      const errorMessages = zodError.errors?.map((err: any) => 
+        `${err.path.join('.')}: ${err.message}`
+      ).join(', ') || 'Invalid form data';
+      throw new Error(`Validation failed: ${errorMessages}`);
+    }
+    
+    // Handle database connection errors
+    if (error instanceof Error && error.message.includes('CONNECTION')) {
+      throw new Error('Database connection failed. Please check your DATABASE_URL.');
+    }
+    
+    // Handle other specific errors
+    if (error instanceof Error) {
+      throw new Error(`Failed to create deck: ${error.message}`);
+    }
+    
+    throw new Error('Failed to create deck: Unknown error');
   }
+  
+  // These should only run if the database operation succeeded
+  revalidatePath('/dashboard');
+  redirect('/dashboard');
 }
 
 export async function updateDeck(formData: FormData) {
