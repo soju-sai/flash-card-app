@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { deleteDeck } from '@/lib/actions/deck';
 import { Deck } from '@/lib/validations/deck';
+import { formatDateHuman } from '@/lib/utils/date';
 import { Trash2, Edit, Play } from 'lucide-react';
 import Link from 'next/link';
 
@@ -33,7 +34,7 @@ export function DeckCard({ deck }: DeckCardProps) {
       <CardContent>
         <div className="flex items-center justify-between">
           <div className="text-sm text-muted-foreground">
-            Created {new Date(deck.createdAt).toLocaleDateString()}
+            Created {formatDateHuman(deck.createdAt)}
           </div>
           <div className="flex items-center space-x-2">
             <Link href={`/study/${deck.id}`}>
