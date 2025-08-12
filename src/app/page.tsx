@@ -1,5 +1,7 @@
 import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -34,6 +36,13 @@ export default function Home() {
             <p className="text-lg text-gray-600 mb-6">
               Welcome back! Ready to continue your learning journey?
             </p>
+            <div className="mb-6">
+              <Link href="/dashboard">
+                <Button size="lg" className="px-8 py-3">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <Card className="hover:shadow-md transition-shadow">
                 <CardHeader>
