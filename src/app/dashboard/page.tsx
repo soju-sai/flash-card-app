@@ -5,7 +5,6 @@ import { decksTable, cardsTable } from '@/db/schema';
 import { eq, count } from 'drizzle-orm';
 import { DeckCard } from '@/components/DeckCard';
 import { CreateDeckDialog } from '@/components/CreateDeckDialog';
-import { DashboardStats } from '@/components/DashboardStats';
 
 export default async function DashboardPage() {
   // Check authentication
@@ -32,10 +31,8 @@ export default async function DashboardPage() {
     .groupBy(decksTable.id)
     .orderBy(decksTable.updatedAt);
 
-  // Calculate total statistics
+  // Calculate deck count for display
   const totalDecks = userDecksWithCounts.length;
-  const totalCards = userDecksWithCounts.reduce((sum, deck) => sum + deck.cardCount, 0);
-  const recentActivity = 0; // TODO: Implement study session tracking
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -49,15 +46,6 @@ export default async function DashboardPage() {
             </p>
           </div>
           <CreateDeckDialog />
-        </div>
-
-        {/* Statistics */}
-        <div className="mb-8">
-          <DashboardStats
-            totalDecks={totalDecks}
-            totalCards={totalCards}
-            recentActivity={recentActivity}
-          />
         </div>
 
         {/* Decks Section */}
@@ -104,18 +92,6 @@ export default async function DashboardPage() {
             </div>
           )}
         </div>
-
-        {/* Recent Activity Section */}
-        {totalDecks > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
-            <div className="bg-white rounded-lg border p-6">
-              <p className="text-gray-600 text-center">
-                Activity tracking will be available soon. Start studying your decks to see your progress here!
-              </p>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
