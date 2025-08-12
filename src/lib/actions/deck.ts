@@ -67,25 +67,53 @@ export async function updateDeck(formData: FormData) {
     throw new Error('Unauthorized');
   }
   
-  const rawData = {
-    id: Number(formData.get('id')),
-    title: formData.get('title'),
-    description: formData.get('description'),
-  };
-  
-  const validatedData = updateDeckSchema.parse(rawData);
-  
   try {
+    const rawData = {
+      id: Number(formData.get('id')),
+      title: formData.get('title'),
+      description: formData.get('description'),
+    };
+    
+    const validatedData = updateDeckSchema.parse(rawData);
+    
+    // Only include fields that are provided
+    const updateData: { title?: string; description?: string } = {};
+    if (validatedData.title !== undefined) {
+      updateData.title = validatedData.title;
+    }
+    if (validatedData.description !== undefined) {
+      updateData.description = validatedData.description;
+    }
+    
     await db.update(decksTable)
-      .set(validatedData)
+      .set({
+        ...updateData,
+        updatedAt: new Date(),
+      })
       .where(and(
         eq(decksTable.id, validatedData.id),
         eq(decksTable.userId, userId) // Ensure user owns the deck
       ));
       
     revalidatePath('/dashboard');
-  } catch {
-    throw new Error('Failed to update deck');
+    revalidatePath(`/deck/${validatedData.id}`);
+  } catch (error) {
+    console.error('Update deck error:', error);
+    
+    // Handle Zod validation errors
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      const zodError = error as { errors?: Array<{ path: string[]; message: string }> };
+      const errorMessages = zodError.errors?.map((err) => 
+        `${err.path.join('.')}: ${err.message}`
+      ).join(', ') || 'Invalid form data';
+      throw new Error(`Validation failed: ${errorMessages}`);
+    }
+    
+    if (error instanceof Error) {
+      throw new Error(`Failed to update deck: ${error.message}`);
+    }
+    
+    throw new Error('Failed to update deck: Unknown error');
   }
 }
 

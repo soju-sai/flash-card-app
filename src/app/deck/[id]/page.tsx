@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { formatDateHuman } from '@/lib/utils/date';
 import { DeleteDeckButton } from '@/components/DeleteDeckButton';
 import { DeleteCardButton } from '@/components/DeleteCardButton';
-import { ArrowLeft, Edit, Plus, Play } from 'lucide-react';
+import { EditDeckDialog } from '@/components/EditDeckDialog';
+import { AddCardDialog } from '@/components/AddCardDialog';
+import { EditCardDialog } from '@/components/EditCardDialog';
+import { ArrowLeft, Play } from 'lucide-react';
 import Link from 'next/link';
 
 interface DeckPageProps {
@@ -91,10 +94,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                   </Button>
                 </Link>
               )}
-              <Button variant="outline">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Deck
-              </Button>
+              <EditDeckDialog deck={deck} />
               <DeleteDeckButton deckId={deck.id} deckTitle={deck.title} />
             </div>
           </div>
@@ -104,10 +104,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Cards</h2>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Card
-            </Button>
+            <AddCardDialog deckId={deck.id} />
           </div>
 
           {cards.length === 0 ? (
@@ -134,10 +131,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                 <p className="text-gray-600 mb-4">
                   Add your first flashcard to start learning!
                 </p>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Card
-                </Button>
+                <AddCardDialog deckId={deck.id} />
               </div>
             </div>
           ) : (
@@ -153,9 +147,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-3 h-3" />
-                        </Button>
+                        <EditCardDialog card={card} cardNumber={index + 1} />
                         <DeleteCardButton cardId={card.id} cardNumber={index + 1} />
                       </div>
                     </div>
