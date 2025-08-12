@@ -49,20 +49,27 @@ export async function createCard(formData: FormData) {
 }
 
 export async function updateCard(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error('Unauthorized');
-  }
-  
-  const rawData = {
-    id: Number(formData.get('id')),
-    frontSide: formData.get('frontSide'),
-    backSide: formData.get('backSide'),
-  };
-  
-  const validatedData = updateCardSchema.parse(rawData);
-  
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      throw new Error('Unauthorized');
+    }
+    
+    const rawData = {
+      id: Number(formData.get('id')),
+      frontSide: formData.get('frontSide'),
+      backSide: formData.get('backSide'),
+    };
+    
+    // Validate the form data
+    let validatedData;
+    try {
+      validatedData = updateCardSchema.parse(rawData);
+    } catch (error) {
+      console.error('Validation error:', error);
+      throw new Error('Invalid form data provided');
+    }
+    
     // First get the card to verify ownership through deck
     const cardWithDeck = await db.select({
       cardId: cardsTable.id,
@@ -74,18 +81,40 @@ export async function updateCard(formData: FormData) {
       .where(eq(cardsTable.id, validatedData.id))
       .limit(1);
     
-    if (cardWithDeck.length === 0 || cardWithDeck[0].userId !== userId) {
-      throw new Error('Card not found or not authorized');
+    if (cardWithDeck.length === 0) {
+      throw new Error('Card not found');
     }
     
+    if (cardWithDeck[0].userId !== userId) {
+      throw new Error('Not authorized to update this card');
+    }
+    
+    // Update the card
     await db.update(cardsTable)
-      .set(validatedData)
+      .set({
+        frontSide: validatedData.frontSide,
+        backSide: validatedData.backSide,
+        updatedAt: new Date(),
+      })
       .where(eq(cardsTable.id, validatedData.id));
       
     revalidatePath('/dashboard');
     revalidatePath(`/deck/${cardWithDeck[0].deckId}`);
-  } catch {
-    throw new Error('Failed to update card');
+    
+  } catch (error) {
+    console.error('Error updating card:', error);
+    
+    // Re-throw known errors with their original message
+    if (error instanceof Error && 
+        (error.message.includes('Unauthorized') || 
+         error.message.includes('Not authorized') ||
+         error.message.includes('Card not found') ||
+         error.message.includes('Invalid form data'))) {
+      throw error;
+    }
+    
+    // For database errors and other unknown errors, provide a generic message
+    throw new Error('Failed to update card. Please try again.');
   }
 }
 

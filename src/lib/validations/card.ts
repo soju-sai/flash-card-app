@@ -20,12 +20,10 @@ export const updateCardSchema = z.object({
   id: z.number().positive('Invalid card ID'),
   frontSide: z.string()
     .min(1, 'Front side is required')
-    .max(1000, 'Front side must be less than 1000 characters')
-    .optional(),
+    .max(1000, 'Front side must be less than 1000 characters'),
   backSide: z.string()
     .min(1, 'Back side is required')
-    .max(1000, 'Back side must be less than 1000 characters')
-    .optional(),
+    .max(1000, 'Back side must be less than 1000 characters'),
 });
 
 export const deleteCardSchema = z.object({
