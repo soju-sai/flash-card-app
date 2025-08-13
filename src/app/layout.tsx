@@ -10,6 +10,7 @@ import {
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import "./globals.css";
+import Link from "next/link";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -41,7 +42,9 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center py-6">
                 <div className="flex items-center">
-                  <h1 className="text-xl font-semibold">Flash Card App</h1>
+                  <h1 className="text-xl font-semibold">
+                    <Link href="/dashboard">Flash Card App</Link>
+                  </h1>
                 </div>
                 <div className="flex items-center space-x-4">
                   <SignedOut>
