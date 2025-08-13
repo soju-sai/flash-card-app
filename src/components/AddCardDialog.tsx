@@ -13,6 +13,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { createCard } from '@/lib/actions/card';
 import { Plus } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AddCardDialogProps {
   deckId: number;
@@ -23,17 +24,31 @@ export function AddCardDialog({ deckId, trigger }: AddCardDialogProps) {
   const [open, setOpen] = useState(false);
 
   const defaultTrigger = (
-    <Button>
-      <Plus className="w-4 h-4 mr-2" />
-      Add Card
+    <Button aria-label="Add Card">
+      <Plus className="w-4 h-4" />
     </Button>
   );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {trigger ? (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      ) : (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                {defaultTrigger}
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              Add Card
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add New Card</DialogTitle>

@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { updateDeck } from '@/lib/actions/deck';
 import { Edit } from 'lucide-react';
 import type { Deck } from '@/lib/validations/deck';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EditDeckDialogProps {
   deck: Deck;
@@ -25,12 +26,20 @@ export function EditDeckDialog({ deck }: EditDeckDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Deck
-        </Button>
-      </DialogTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button variant="outline" aria-label="Edit Deck">
+                <Edit className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            Edit Deck
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Deck</DialogTitle>

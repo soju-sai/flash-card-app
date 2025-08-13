@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { deleteDeck } from '@/lib/actions/deck';
 import { Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DeleteDeckButtonProps {
   deckId: number;
@@ -19,11 +20,21 @@ export function DeleteDeckButton({ deckId, deckTitle }: DeleteDeckButtonProps) {
   };
 
   return (
-    <Button 
-      variant="destructive" 
-      onClick={handleDelete}
-    >
-      <Trash2 className="w-4 h-4" />
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            aria-label="Delete Deck"
+          >
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Delete Deck
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

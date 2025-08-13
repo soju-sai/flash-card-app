@@ -2,6 +2,8 @@ import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LayoutDashboard } from "lucide-react";
 
 export default function Home() {
   return (
@@ -37,11 +39,20 @@ export default function Home() {
               Welcome back! Ready to continue your learning journey?
             </p>
             <div className="mb-6">
-              <Link href="/dashboard">
-                <Button size="lg" className="px-8 py-3">
-                  Go to Dashboard
-                </Button>
-              </Link>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link href="/dashboard">
+                      <Button size="lg" className="px-8 py-3" aria-label="Go to Dashboard">
+                        <LayoutDashboard className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Go to Dashboard
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto">
               <Card className="hover:shadow-md transition-shadow">

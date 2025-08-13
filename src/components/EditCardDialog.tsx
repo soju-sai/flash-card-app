@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { updateCard } from '@/lib/actions/card';
 import { Edit } from 'lucide-react';
 import { Card } from '@/lib/validations/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EditCardDialogProps {
   card: Card;
@@ -25,16 +26,31 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
   const [open, setOpen] = useState(false);
 
   const defaultTrigger = (
-    <Button variant="outline" size="sm">
+    <Button variant="outline" size="sm" aria-label="Edit Card">
       <Edit className="w-3 h-3" />
     </Button>
   );
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || defaultTrigger}
-      </DialogTrigger>
+      {trigger ? (
+        <DialogTrigger asChild>
+          {trigger}
+        </DialogTrigger>
+      ) : (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                {defaultTrigger}
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              Edit Card
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Card #{cardNumber}</DialogTitle>

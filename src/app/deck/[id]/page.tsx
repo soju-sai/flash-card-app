@@ -13,6 +13,7 @@ import { EditDeckDialog } from '@/components/EditDeckDialog';
 import { AddCardDialog } from '@/components/AddCardDialog';
 import { EditCardDialog } from '@/components/EditCardDialog';
 import { ArrowLeft, Play } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 
 interface DeckPageProps {
@@ -62,12 +63,20 @@ export default async function DeckPage({ params }: DeckPageProps) {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
-            <Link href="/dashboard">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/dashboard">
+                    <Button variant="outline" size="sm" aria-label="Back to Dashboard">
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Back to Dashboard
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           
           <div className="flex items-start justify-between">
@@ -87,12 +96,20 @@ export default async function DeckPage({ params }: DeckPageProps) {
             
             <div className="flex items-center gap-2">
               {cards.length > 0 && (
-                <Link href={`/decks/${deck.id}/study`}>
-                  <Button>
-                    <Play className="w-4 h-4 mr-2" />
-                    Study
-                  </Button>
-                </Link>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={`/decks/${deck.id}/study`}>
+                        <Button aria-label="Study">
+                          <Play className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Study
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
               <EditDeckDialog deck={deck} />
               <DeleteDeckButton deckId={deck.id} deckTitle={deck.title} />

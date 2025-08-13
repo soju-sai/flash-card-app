@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { deleteCard } from '@/lib/actions/card';
 import { Trash2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface DeleteCardButtonProps {
   cardId: number;
@@ -19,12 +20,22 @@ export function DeleteCardButton({ cardId, cardNumber }: DeleteCardButtonProps) 
   };
 
   return (
-    <Button 
-      variant="destructive" 
-      size="sm"
-      onClick={handleDelete}
-    >
-      <Trash2 className="w-3 h-3" />
-    </Button>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleDelete}
+            aria-label="Delete Card"
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          Delete Card
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

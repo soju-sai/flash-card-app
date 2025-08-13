@@ -10,8 +10,11 @@ import {
   ChevronRight, 
   RotateCcw, 
   Shuffle, 
-  CheckCircle
+  CheckCircle,
+  Eye,
+  EyeOff
 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { type Card as CardType } from '@/lib/validations/card';
 import { type Deck } from '@/lib/validations/deck';
@@ -128,15 +131,31 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
             You&apos;ve studied all {shuffledCards.length} cards in &quot;{deck.title}&quot;.
           </p>
           <div className="flex flex-col gap-3">
-            <Button onClick={handleReset} className="w-full">
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Study Again
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button onClick={handleReset} className="w-full" aria-label="Study Again">
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Study Again
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <Link href={`/deck/${deck.id}`}>
-              <Button variant="outline" className="w-full">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Deck
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" className="w-full" aria-label="Back to Deck">
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Back to Deck
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </Link>
           </div>
         </div>
@@ -150,12 +169,20 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Link href={`/deck/${deck.id}`}>
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back
-              </Button>
-            </Link>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href={`/deck/${deck.id}`}>
+                    <Button variant="outline" size="sm" aria-label="Back">
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Back
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             <div>
               <h1 className="text-xl font-semibold text-gray-900">{deck.title}</h1>
               <p className="text-sm text-gray-600">Study Mode</p>
@@ -163,14 +190,30 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleShuffle}>
-              <Shuffle className="w-4 h-4 mr-2" />
-              {isShuffled ? 'Shuffled' : 'Shuffle'}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleReset}>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={handleShuffle} aria-label={isShuffled ? 'Shuffled' : 'Shuffle'}>
+                    <Shuffle className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isShuffled ? 'Shuffled' : 'Shuffle'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={handleReset} aria-label="Reset">
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Reset
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
 
@@ -252,46 +295,87 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
 
         {/* Controls */}
         <div className="flex justify-center items-center gap-4">
-          <Button 
-            variant="outline" 
-            onClick={handlePrevious}
-            disabled={currentIndex === 0}
-            size="lg"
-          >
-            <ChevronLeft className="w-5 h-5 mr-2" />
-            Previous
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  onClick={handlePrevious}
+                  disabled={currentIndex === 0}
+                  size="lg"
+                  aria-label="Previous"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Previous
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleFlip}
-              size="lg"
-            >
-              {isFlipped ? 'Show Front' : 'Show Answer'}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleFlip}
+                    size="lg"
+                    aria-label={isFlipped ? 'Show Front' : 'Show Answer'}
+                  >
+                    {isFlipped ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isFlipped ? 'Show Front' : 'Show Answer'}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
             
             {isFlipped && !studiedCards.has(currentCard.id) && (
-              <Button 
-                onClick={handleMarkStudied}
-                size="lg"
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Got it!
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      onClick={handleMarkStudied}
+                      size="lg"
+                      className="bg-green-600 hover:bg-green-700"
+                      aria-label="Got it!"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Got it!
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
 
-          <Button 
-            variant="outline" 
-            onClick={handleNext}
-            disabled={currentIndex === shuffledCards.length - 1}
-            size="lg"
-          >
-            Next
-            <ChevronRight className="w-5 h-5 ml-2" />
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  onClick={handleNext}
+                  disabled={currentIndex === shuffledCards.length - 1}
+                  size="lg"
+                  aria-label="Next"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Next
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         {/* Keyboard shortcuts hint */}
