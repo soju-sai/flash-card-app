@@ -1,0 +1,197 @@
+---
+alwaysApply: true
+description: Clerk billing rules for B2C SaaS with Next.js — defines plans/features and mandates access gating with has() and <Protect>.
+---
+
+# Clerk Billing — Plans, Features, and Access Control (B2C SaaS)
+
+本專案使用 Clerk Billing（B2C）管理「個人用戶」的訂閱方案與功能授權，並以 Next.js 實作前後端的權限控管。此規則文件為全域規則（alwaysApply），所有處理方案/功能門檻的頁面、Server Components、Server Actions 與 UI 控制都必須遵守。
+
+## 方案與功能（本專案既有設定）
+
+- Plans
+  - `free_user`
+  - `premium_user`
+
+- Features
+  - `free_user`
+    - `2_deck_limited`
+  - `premium_user`
+    - `unlimited_decks`
+    - `ai_deck`
+
+請務必以上述「精準 slug」進行判斷，不可使用其他命名或硬編碼替代字串。
+
+## 實作原則
+
+1. 必須以 Clerk 的授權能力進行檢查：
+   - 伺服器側使用 `auth().has()` 檢驗是否具有某個 plan 或 feature。
+   - React/Next.js UI 可搭配 `<Protect>` 元件在客戶端隱藏/顯示內容。
+2. 伺服器端為權限「最終事實來源」。任何需限制的行為（例如：建立 deck、AI 產生 deck）必須在 Server Component 或 Server Action 內再次驗證，不可只做前端 UI 限制。
+3. 不可直接信任客戶端狀態；即使 UI 有 `<Protect>`，Server 端仍須以 `has()` 再檢查。
+4. 與本專案安全規則整合：同時遵守
+   - [src/middleware.ts](mdc:src/middleware.ts) 的 Clerk 認證保護
+   - Drizzle ORM 強制使用（見 [.cursor/rules/drizzle-orm-mandatory.mdc](mdc:.cursor/rules/drizzle-orm-mandatory.mdc) 如存在）
+   - 任何使用者資料操作皆以 `userId` 過濾（見既有 Workspace 規則）
+
+## 典型使用情境與範例
+
+### 1) 建立計價頁（Pricing Page）
+
+在 Next.js 新增 `app/pricing/page.tsx` 並使用 Clerk 的 `<PricingTable />` 顯示方案與功能：
+
+```tsx
+// app/pricing/page.tsx
+import { PricingTable } from '@clerk/nextjs'
+
+export default function PricingPage() {
+  return (
+    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 1rem' }}>
+      <PricingTable />
+    </div>
+  )
+}
+```
+
+### 2) 伺服器側以 has() 進行授權檢查（Plan / Feature）
+
+用於 Server Components 或頁面保護：
+
+```tsx
+// app/premium-only/page.tsx
+import { auth } from '@clerk/nextjs/server'
+
+export default async function PremiumOnlyPage() {
+  const { has } = await auth()
+
+  const isPremium = has({ plan: 'premium_user' })
+  if (!isPremium) {
+    return <h1>Premium plan is required.</h1>
+  }
+
+  return <h1>Premium content</h1>
+}
+```
+
+以功能授權檢查特定能力（例如 `ai_deck`）：
+
+```tsx
+// app/ai-deck/page.tsx
+import { auth } from '@clerk/nextjs/server'
+
+export default async function AIDeckPage() {
+  const { has } = await auth()
+
+  const canUseAI = has({ feature: 'ai_deck' })
+  if (!canUseAI) {
+    return <h1>AI deck feature is required.</h1>
+  }
+
+  return <h1>AI deck builder</h1>
+}
+```
+
+### 3) Client UI 以 <Protect> 隱藏/顯示內容（不可取代伺服器檢查）
+
+```tsx
+// app/components/PremiumSection.tsx
+import { Protect } from '@clerk/nextjs'
+
+export function PremiumSection() {
+  return (
+    <Protect plan="premium_user" fallback={<p>Upgrade to Premium to see this section.</p>}>
+      <h2>Premium tools</h2>
+    </Protect>
+  )
+}
+```
+
+功能授權版本：
+
+```tsx
+// app/components/AIDeckButton.tsx
+import { Protect } from '@clerk/nextjs'
+
+export function AIDeckButton() {
+  return (
+    <Protect feature="ai_deck" fallback={null}>
+      <button>Create AI Deck</button>
+    </Protect>
+  )
+}
+```
+
+> 注意：上述 `<Protect>` 僅為 UI/UX；實際行為（例如建立 deck、觸發 AI 任務）仍必須在 Server Action 再次用 `has()` 驗證。
+
+### 4) Server Action 權限檢查與「免費 2 個 deck 限制」
+
+當用戶無 `unlimited_decks` 功能時，建立 deck 需限制「最多 2 個」。以 Drizzle 查詢 deck 數量並判斷：
+
+```ts
+// src/lib/actions/deck.ts (示意)
+'use server'
+
+import { auth } from '@clerk/nextjs/server'
+import { revalidatePath } from 'next/cache'
+import { db } from '@/lib/db'
+import { decksTable } from '@/db/schema'
+import { eq, and, count } from 'drizzle-orm'
+
+export async function createDeck(formData: FormData) {
+  const { userId, has } = await auth()
+  if (!userId) throw new Error('Unauthorized')
+
+  const title = String(formData.get('title') || '')
+
+  const hasUnlimited = has({ feature: 'unlimited_decks' })
+  if (!hasUnlimited) {
+    const [{ total }] = await db
+      .select({ total: count() })
+      .from(decksTable)
+      .where(eq(decksTable.userId, userId))
+
+    if (total >= 2) {
+      throw new Error('Free plan allows up to 2 decks')
+    }
+  }
+
+  await db.insert(decksTable).values({ title, userId })
+  revalidatePath('/decks')
+}
+```
+
+### 5) AI 功能動作需檢查 `ai_deck`
+
+所有與 AI 相關的 Server Actions 必須先檢查：
+
+```ts
+// src/lib/actions/card.ts (示意)
+'use server'
+
+import { auth } from '@clerk/nextjs/server'
+
+export async function generateAIDeck(/* params */) {
+  const { userId, has } = await auth()
+  if (!userId) throw new Error('Unauthorized')
+
+  const canUseAI = has({ feature: 'ai_deck' })
+  if (!canUseAI) throw new Error('AI deck feature required')
+
+  // Proceed with AI generation...
+}
+```
+
+## 禁用與注意事項
+
+- 不可只做前端 `<Protect>`；所有受限行為必須在伺服器端（Server Components/Server Actions）以 `has()` 檢查。
+- 不可硬編碼 user 狀態或從客戶端傳入的旗標來判斷權限。
+- 不可繞過 Drizzle ORM 直接執行 SQL；所有 DB 操作遵守專案既有 Drizzle 規範與 `userId` 過濾。
+- 不可在未認證情況下提供任何使用者專屬資料或行為。
+
+## 參考
+
+- Clerk Billing（B2C）文件重點：
+  - 設定 Plans 與 Features 後，可由 `<PricingTable />` 顯示
+  - 伺服器端以 `has({ plan: '...' })` 或 `has({ feature: '...' })` 檢查授權
+  - React 端可用 `<Protect>` 包裹內容與元件
+

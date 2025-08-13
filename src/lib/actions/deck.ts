@@ -6,16 +6,30 @@ import { decksTable } from '@/db/schema';
 import { createDeckSchema, updateDeckSchema, deleteDeckSchema } from '@/lib/validations/deck';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 
 export async function createDeck(formData: FormData) {
   // Authentication check
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   if (!userId) {
     throw new Error('Unauthorized');
   }
   
   try {
+    // Enforce plan/feature limits: free users can create up to 2 decks
+    const hasUnlimited = has({ feature: 'unlimited_decks' });
+    if (!hasUnlimited) {
+      const [{ total }] = await db
+        .select({ total: count() })
+        .from(decksTable)
+        .where(eq(decksTable.userId, userId));
+
+      if (total >= 2) {
+        // Redirect free users who reached the limit to pricing
+        redirect('/pricing');
+      }
+    }
+
     // Extract and validate data
     const rawData = {
       title: formData.get('title'),

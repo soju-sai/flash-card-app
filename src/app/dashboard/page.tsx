@@ -5,10 +5,12 @@ import { decksTable, cardsTable } from '@/db/schema';
 import { eq, count, desc } from 'drizzle-orm';
 import { DeckCard } from '@/components/DeckCard';
 import { CreateDeckDialog } from '@/components/CreateDeckDialog';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 export default async function DashboardPage() {
   // Check authentication
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   
   if (!userId) {
     redirect('/');
@@ -33,6 +35,8 @@ export default async function DashboardPage() {
 
   // Calculate deck count for display
   const totalDecks = userDecksWithCounts.length;
+  const hasUnlimitedDecks = has({ feature: 'unlimited_decks' });
+  const reachedFreeLimit = !hasUnlimitedDecks && totalDecks >= 2;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -45,7 +49,15 @@ export default async function DashboardPage() {
               Manage your flashcard decks and track your learning progress
             </p>
           </div>
-          {totalDecks > 0 && <CreateDeckDialog />}
+          {totalDecks > 0 && (
+            reachedFreeLimit ? (
+              <Link href="/pricing">
+                <Button aria-label="Upgrade to create more decks">Upgrade</Button>
+              </Link>
+            ) : (
+              <CreateDeckDialog />
+            )
+          )}
         </div>
 
         {/* Decks Section */}
@@ -81,7 +93,13 @@ export default async function DashboardPage() {
                 <p className="text-gray-600 mb-4">
                   Create your first flashcard deck to start learning!
                 </p>
-                <CreateDeckDialog />
+                {reachedFreeLimit ? (
+                  <Link href="/pricing">
+                    <Button aria-label="Upgrade to create decks">Upgrade</Button>
+                  </Link>
+                ) : (
+                  <CreateDeckDialog />
+                )}
               </div>
             </div>
           ) : (
