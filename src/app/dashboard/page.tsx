@@ -45,7 +45,7 @@ export default async function DashboardPage() {
               Manage your flashcard decks and track your learning progress
             </p>
           </div>
-          <CreateDeckDialog />
+          {totalDecks > 0 && <CreateDeckDialog />}
         </div>
 
         {/* Decks Section */}
