@@ -79,13 +79,13 @@ export default async function DeckPage({ params }: DeckPageProps) {
             </TooltipProvider>
           </div>
           
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-gray-900">{deck.title}</h1>
               {deck.description && (
                 <p className="text-gray-600">{deck.description}</p>
               )}
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
                 <span>Created {formatDateHuman(deck.createdAt)}</span>
                 <span>•</span>
                 <span>Updated {formatDateHuman(deck.updatedAt)}</span>
@@ -94,7 +94,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:justify-end">
               {cards.length > 0 && (
                 <TooltipProvider>
                   <Tooltip>
@@ -119,9 +119,9 @@ export default async function DeckPage({ params }: DeckPageProps) {
 
         {/* Cards Section */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Cards</h2>
-            <AddCardDialog deckId={deck.id} />
+            {cards.length > 0 && <AddCardDialog deckId={deck.id} />}
           </div>
 
           {cards.length === 0 ? (
