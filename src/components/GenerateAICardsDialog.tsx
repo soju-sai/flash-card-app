@@ -23,6 +23,7 @@ interface GenerateAICardsDialogProps {
 export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: GenerateAICardsDialogProps) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number>(50);
+  const [error, setError] = useState<string | null>(null);
 
   const disabledReason = !hasTitle || !hasDescription
     ? 'Please fill in title and description to use AI generation'
@@ -59,10 +60,19 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
           </DialogDescription>
         </DialogHeader>
 
+        {error && (
+          <p className="text-sm text-red-600">{error}</p>
+        )}
+
         <form
           action={async (formData) => {
-            await generateAICards(formData);
-            setOpen(false);
+            try {
+              await generateAICards(formData);
+              setError(null);
+              setOpen(false);
+            } catch (e: any) {
+              setError(e?.message || 'Failed to generate cards');
+            }
           }}
           className="space-y-4"
         >

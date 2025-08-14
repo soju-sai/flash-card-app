@@ -46,16 +46,19 @@ export async function generateAICards(formData: FormData) {
     throw new Error('Deck title and description are required for AI generation')
   }
 
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error('AI provider not configured')
+  }
+
   try {
     type AICard = z.infer<typeof aiCardSchema>
     const { object: cards } = await generateObject<AICard>({
       model: openai('gpt-4o-mini'),
       output: 'array',
       schema: aiCardSchema,
-      mode: 'json',
       temperature: 1.1,
       maxTokens: 800,
-      maxRetries: 1,
+      maxRetries: 0,
       prompt: [
         'You are an assistant that creates flashcards.',
         `Create exactly ${count} diverse and non-redundant flashcards.`,
@@ -82,7 +85,7 @@ export async function generateAICards(formData: FormData) {
 
     revalidatePath('/dashboard')
     revalidatePath(`/deck/${deckId}`)
-  } catch (error) {
+  } catch (error: any) {
     if (NoObjectGeneratedError.isInstance(error)) {
       console.error('AI generation failed', {
         cause: error.cause,
@@ -92,7 +95,14 @@ export async function generateAICards(formData: FormData) {
       })
       throw new Error('Failed to generate cards')
     }
-    throw error
+
+    const status = error?.status ?? error?.response?.status
+    const message = String(error?.message ?? '')
+    if (status === 429 || /quota|billing|insufficient_quota/i.test(message)) {
+      throw new Error('AI quota exceeded. Please check your plan and billing and try again later.')
+    }
+
+    throw new Error('Failed to generate cards')
   }
 }
 
