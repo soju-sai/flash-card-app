@@ -67,10 +67,18 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
         <form
           action={async (formData) => {
             try {
-              await generateAICards(formData);
-              setError(null);
-              setOpen(false);
+              const result = await generateAICards(formData);
+              console.log('generateAICards result:', result);
+              if (result && (result as any).success) {
+                setError(null);
+                setOpen(false);
+              } else {
+                const message = (result as any)?.error || 'Failed to generate cards';
+                setError(message);
+              }
             } catch (e: any) {
+              // Log the full error for debugging in browser console
+              console.error('generateAICards client catch:', e);
               setError(e?.message || 'Failed to generate cards');
             }
           }}
