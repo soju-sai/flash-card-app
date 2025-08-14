@@ -15,6 +15,7 @@ import { EditCardDialog } from '@/components/EditCardDialog';
 import { ArrowLeft, Play } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
+import { GenerateAICardsDialog } from '@/components/GenerateAICardsDialog';
 
 interface DeckPageProps {
   params: Promise<{
@@ -24,7 +25,7 @@ interface DeckPageProps {
 
 export default async function DeckPage({ params }: DeckPageProps) {
   // Check authentication
-  const { userId } = await auth();
+  const { userId, has } = await auth();
   
   if (!userId) {
     redirect('/');
@@ -49,6 +50,8 @@ export default async function DeckPage({ params }: DeckPageProps) {
   if (!deck) {
     notFound();
   }
+
+  const canUseAI = has({ feature: 'ai_deck' });
 
   // Fetch cards for this deck
   const cards = await db
@@ -110,6 +113,13 @@ export default async function DeckPage({ params }: DeckPageProps) {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+              )}
+              {canUseAI && (
+                <GenerateAICardsDialog
+                  deckId={deck.id}
+                  hasTitle={Boolean(deck.title)}
+                  hasDescription={Boolean(deck.description)}
+                />
               )}
               <EditDeckDialog deck={deck} />
               <DeleteDeckButton deckId={deck.id} deckTitle={deck.title} />
