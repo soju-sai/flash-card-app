@@ -1,0 +1,72 @@
+---
+alwaysApply: true
+description: Contract for AI Deck generation using Vercel AI SDK with Clerk billing and Drizzle ORM.
+globs: src/**/*.ts,src/**/*.tsx
+---
+
+# AI Deck Generation Contract
+
+This contract defines the mandatory behavior for the AI Deck feature. It complements the structured data rule and the global security rules (Clerk auth + Drizzle ORM + Billing feature gates).
+
+## Functional Requirements
+
+- Generate exactly 50 cards per AI Deck request
+- Each card contains:
+  - `frontSide`: concise prompt/question/term (1–280 chars)
+  - `backSide`: clear answer/explanation (1–2000 chars)
+- Content should be diverse, non-redundant, and relevant to the deck `title` and `description`
+
+## Validation Schema (Zod)
+
+Define and reuse a card schema for generation and DB writes:
+
+```ts
+import { z } from 'zod'
+
+export const aiCardSchema = z.object({
+  frontSide: z.string().min(1).max(280),
+  backSide: z.string().min(1).max(2000),
+})
+
+export type AICard = z.infer<typeof aiCardSchema>
+```
+
+## Server Action Rules
+
+- Perform Clerk authentication: `const { userId, has } = await auth()`
+- Enforce feature entitlement: `has({ feature: 'ai_deck' })`
+- Enforce user data isolation (scoped by `userId`)
+- Use Vercel AI SDK (`generateObject` or `streamObject`) with the Zod schema
+- Validate the result and ensure length === 50 before any DB writes
+- Insert cards using Drizzle in a transaction, linked to the target deck and `userId`
+- Revalidate relevant paths after mutation (e.g., `/decks/[id]`)
+
+## Error Handling
+
+- Catch `NoObjectGeneratedError` from Vercel AI SDK and log: `cause`, `text`, `response`, `usage`
+- If validation fails or card count is not 50, throw a safe error message (do not leak provider internals)
+- Return appropriate UI feedback via calling page/component
+
+## Example Flow (High Level)
+
+1. Server Action receives `deckId`, `title`, `description`
+2. AuthN/AuthZ check with Clerk; verify `ai_deck` feature
+3. Call `generateObject` or `streamObject` with `aiCardSchema`
+4. Validate array length === 50
+5. Begin Drizzle transaction; insert all cards for `deckId` with `userId`
+6. Revalidate deck detail and study routes
+
+## Forbidden Patterns
+
+- Client-side fetching for AI generation
+- Missing `userId` filter or ownership checks
+- Bypassing Zod validation or inserting partial data
+- Raw SQL or non-Drizzle DB access
+- Proceeding on < 50 or > 50 generated cards
+
+## References
+
+- Structured data rule: [ai-sdk-structured-data.mdc](mdc:.cursor/rules/ai-sdk-structured-data.mdc)
+- Clerk auth and isolation: [src/middleware.ts](mdc:src/middleware.ts)
+- Drizzle configuration: [src/lib/db.ts](mdc:src/lib/db.ts), [src/db/schema.ts](mdc:src/db/schema.ts)
+

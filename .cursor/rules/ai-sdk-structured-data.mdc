@@ -1,0 +1,162 @@
+---
+alwaysApply: true
+description: Guidance for using Vercel AI SDK to generate structured data for AI features (AI Deck) with Clerk auth and Drizzle.
+globs: src/**/*.ts,src/**/*.tsx
+---
+
+# Vercel AI SDK — Structured Data Generation (AI Deck)
+
+This project uses Vercel AI SDK with OpenAI to generate structured data for the AI Deck feature. Follow these rules whenever you implement, modify, or call AI generation logic.
+
+## Core Libraries
+
+- Import model client from `@ai-sdk/openai`
+- Use `generateObject` or `streamObject` from `ai`
+- Define schemas with `zod` and validate all AI outputs
+
+```ts
+// Example imports for Server Actions / Server Components
+import { openai } from '@ai-sdk/openai'
+import { generateObject, streamObject, NoObjectGeneratedError } from 'ai'
+import { z } from 'zod'
+```
+
+## Mandatory Placement
+
+- Perform AI generation ONLY on the server (Server Actions or Server Components)
+- Do NOT trigger AI calls from Client Components
+- All AI-powered mutations must follow the existing Server Action rules in [src/lib/actions](mdc:src/lib/actions)
+
+See related rules:
+- Clerk auth and data isolation: [src/middleware.ts](mdc:src/middleware.ts)
+- Drizzle mandatory usage: [src/lib/db.ts](mdc:src/lib/db.ts), [src/db/schema.ts](mdc:src/db/schema.ts)
+- Next.js data/validation pattern: [.cursor/rules/Next.js Data Flow and Validation Rule](mdc:.cursor/rules)
+
+## AuthZ Requirements (Clerk Billing)
+
+- Before any AI Deck generation, verify:
+  - `auth().has({ feature: 'ai_deck' })`
+  - The user is authenticated and authorized
+- Enforce per existing Always Applied rules (Clerk + Billing). Do not bypass.
+
+## Structured Output — Preferred Pattern
+
+Use `generateObject` or `streamObject` with an explicit Zod schema.
+
+```ts
+// Server-side example: generate 50 flashcards
+// NOTE: This is a guideline snippet. Implement in Server Actions (e.g. [src/lib/actions/card.ts](mdc:src/lib/actions/card.ts)).
+import { openai } from '@ai-sdk/openai'
+import { generateObject, NoObjectGeneratedError } from 'ai'
+import { z } from 'zod'
+
+const cardSchema = z.object({
+  frontSide: z.string().min(1).max(280),
+  backSide: z.string().min(1).max(2000),
+})
+
+export async function generateDeckCards({
+  deckTitle,
+  deckDescription,
+}: {
+  deckTitle: string
+  deckDescription: string
+}) {
+  try {
+    const { object: cards } = await generateObject({
+      model: openai('gpt-4.1'),
+      output: 'array',
+      schema: cardSchema,
+      maxRetries: 1,
+      prompt: [
+        'You are an assistant that creates flashcards.',
+        `Create exactly 50 diverse and non-redundant flashcards based on:`,
+        `Title: ${deckTitle}`,
+        `Description: ${deckDescription}`,
+        'Return only the data that matches the provided schema. No extra fields.',
+      ].join('\n'),
+      // Optional: attempt to repair malformed JSON
+      experimental_repairText: async ({ text }) => text,
+    })
+
+    if (!Array.isArray(cards) || cards.length !== 50) {
+      throw new Error('AI must return exactly 50 cards')
+    }
+
+    return cards
+  } catch (error) {
+    if (NoObjectGeneratedError.isInstance(error)) {
+      // Log enriched details safely
+      console.error('AI generation failed', {
+        cause: error.cause,
+        text: error.text,
+        response: error.response,
+        usage: error.usage,
+      })
+    }
+    throw error
+  }
+}
+```
+
+### Streaming Alternative
+
+When interactivity is required or responses are large, prefer `streamObject` and consume `elementStream` for arrays.
+
+```ts
+import { openai } from '@ai-sdk/openai'
+import { streamObject } from 'ai'
+import { z } from 'zod'
+
+const cardSchema = z.object({
+  frontSide: z.string(),
+  backSide: z.string(),
+})
+
+export async function streamDeckCards(deckTitle: string, deckDescription: string) {
+  const { elementStream } = streamObject({
+    model: openai('gpt-4.1'),
+    output: 'array',
+    schema: cardSchema,
+    prompt: `Create exactly 50 flashcards for "${deckTitle}" — ${deckDescription}.`,
+    onError({ error }) {
+      console.error(error)
+    },
+  })
+
+  const cards: Array<z.infer<typeof cardSchema>> = []
+  for await (const card of elementStream) cards.push(card)
+  if (cards.length !== 50) throw new Error('AI must return exactly 50 cards')
+  return cards
+}
+```
+
+## Error Handling Requirements
+
+- Catch `NoObjectGeneratedError` and log `cause`, `text`, `response`, and `usage`
+- Throw a user-safe error if validation fails or object count is not exactly 50
+- Do not return partial or unvalidated data to the client
+
+## Database Writes (Drizzle)
+
+- Insert AI-generated cards via Drizzle only after successful validation
+- Always enforce `userId` scoping and ownership checks
+- Prefer a transaction when inserting multiple cards
+
+See schema & actions:
+- [src/db/schema.ts](mdc:src/db/schema.ts)
+- [src/lib/actions/card.ts](mdc:src/lib/actions/card.ts)
+
+## Configuration
+
+- Use environment variables for provider credentials (e.g., `OPENAI_API_KEY`)
+- Prefer `openai('gpt-4.1')` or other configured models; keep model selection centralized when possible
+- Avoid hardcoding API keys or model details in components
+
+## Forbidden Patterns
+
+- Client-side AI calls
+- Unvalidated AI output (missing Zod validation)
+- Bypassing Clerk auth or skipping `has({ feature: 'ai_deck' })`
+- Direct SQL or any non-Drizzle DB operations
+
