@@ -44,43 +44,50 @@ See related rules:
 Use `generateObject` or `streamObject` with an explicit Zod schema.
 
 ```ts
-// Server-side example: generate 50 flashcards
+// Server-side example: generate N flashcards with { front, end }
 // NOTE: This is a guideline snippet. Implement in Server Actions (e.g. [src/lib/actions/card.ts](mdc:src/lib/actions/card.ts)).
 import { openai } from '@ai-sdk/openai'
 import { generateObject, NoObjectGeneratedError } from 'ai'
 import { z } from 'zod'
 
 const cardSchema = z.object({
-  frontSide: z.string().min(1).max(280),
-  backSide: z.string().min(1).max(2000),
+  front: z.string().min(1).max(280),
+  end: z.string().min(1).max(2000),
 })
 
-export async function generateDeckCards({
-  deckTitle,
-  deckDescription,
+export async function generateCards({
+  title,
+  description,
+  count,
 }: {
-  deckTitle: string
-  deckDescription: string
+  title: string
+  description: string
+  count: number
 }) {
   try {
+    if (!Number.isFinite(count) || count < 1 || count > 200) {
+      throw new Error('Count must be between 1 and 200')
+    }
     const { object: cards } = await generateObject({
-      model: openai('gpt-4.1'),
+      model: openai('gpt-4o-mini'),
       output: 'array',
       schema: cardSchema,
       maxRetries: 1,
+      temperature: 1.1,
+      maxOutputTokens: 800,
       prompt: [
         'You are an assistant that creates flashcards.',
-        `Create exactly 50 diverse and non-redundant flashcards based on:`,
-        `Title: ${deckTitle}`,
-        `Description: ${deckDescription}`,
-        'Return only the data that matches the provided schema. No extra fields.',
+        `Create exactly ${count} diverse and non-redundant flashcards based on:`,
+        `Title: ${title}`,
+        `Description: ${description}`,
+        'Only return an array of objects with keys: front, end. No extra fields.',
       ].join('\n'),
       // Optional: attempt to repair malformed JSON
       experimental_repairText: async ({ text }) => text,
     })
 
-    if (!Array.isArray(cards) || cards.length !== 50) {
-      throw new Error('AI must return exactly 50 cards')
+    if (!Array.isArray(cards) || cards.length !== count) {
+      throw new Error(`AI must return exactly ${count} cards`)
     }
 
     return cards
@@ -109,16 +116,22 @@ import { streamObject } from 'ai'
 import { z } from 'zod'
 
 const cardSchema = z.object({
-  frontSide: z.string(),
-  backSide: z.string(),
+  front: z.string(),
+  end: z.string(),
 })
 
-export async function streamDeckCards(deckTitle: string, deckDescription: string) {
+export async function streamCards(title: string, description: string, count: number) {
+  if (!Number.isFinite(count) || count < 1 || count > 200) {
+    throw new Error('Count must be between 1 and 200')
+  }
+
   const { elementStream } = streamObject({
-    model: openai('gpt-4.1'),
+    model: openai('gpt-4o-mini'),
     output: 'array',
     schema: cardSchema,
-    prompt: `Create exactly 50 flashcards for "${deckTitle}" — ${deckDescription}.`,
+    temperature: 1.1,
+    maxOutputTokens: 800,
+    prompt: `Create exactly ${count} flashcards for "${title}" — ${description}. Return only { front, end } objects.`,
     onError({ error }) {
       console.error(error)
     },
@@ -126,7 +139,7 @@ export async function streamDeckCards(deckTitle: string, deckDescription: string
 
   const cards: Array<z.infer<typeof cardSchema>> = []
   for await (const card of elementStream) cards.push(card)
-  if (cards.length !== 50) throw new Error('AI must return exactly 50 cards')
+  if (cards.length !== count) throw new Error(`AI must return exactly ${count} cards`)
   return cards
 }
 ```
@@ -150,7 +163,7 @@ See schema & actions:
 ## Configuration
 
 - Use environment variables for provider credentials (e.g., `OPENAI_API_KEY`)
-- Prefer `openai('gpt-4.1')` or other configured models; keep model selection centralized when possible
+- Prefer `openai('gpt-4o-mini')` or other configured models; keep model selection centralized when possible
 - Avoid hardcoding API keys or model details in components
 
 ## Forbidden Patterns

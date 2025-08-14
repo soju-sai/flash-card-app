@@ -10,7 +10,8 @@ This contract defines the mandatory behavior for the AI Deck feature. It complem
 
 ## Functional Requirements
 
-- Generate exactly 50 cards per AI Deck request
+- Generate a user-specified number of cards per AI Deck request
+  - `count` must be between 1 and 200 (inclusive)
 - Each card contains:
   - `frontSide`: concise prompt/question/term (1–280 chars)
   - `backSide`: clear answer/explanation (1–2000 chars)
@@ -37,7 +38,8 @@ export type AICard = z.infer<typeof aiCardSchema>
 - Enforce feature entitlement: `has({ feature: 'ai_deck' })`
 - Enforce user data isolation (scoped by `userId`)
 - Use Vercel AI SDK (`generateObject` or `streamObject`) with the Zod schema
-- Validate the result and ensure length === 50 before any DB writes
+- Model and settings: `openai('gpt-4o-mini')`, `temperature: 1.1`, `maxOutputTokens: 800`
+- Validate the result and ensure length === `count` (where `1 ≤ count ≤ 200`) before any DB writes
 - Insert cards using Drizzle in a transaction, linked to the target deck and `userId`
 - Revalidate relevant paths after mutation (e.g., `/decks/[id]`)
 
@@ -49,12 +51,13 @@ export type AICard = z.infer<typeof aiCardSchema>
 
 ## Example Flow (High Level)
 
-1. Server Action receives `deckId`, `title`, `description`
+1. Server Action receives `deckId`, `title`, `description`, `count`
 2. AuthN/AuthZ check with Clerk; verify `ai_deck` feature
-3. Call `generateObject` or `streamObject` with `aiCardSchema`
-4. Validate array length === 50
-5. Begin Drizzle transaction; insert all cards for `deckId` with `userId`
-6. Revalidate deck detail and study routes
+3. Guardrail: ensure `1 ≤ count ≤ 200`
+4. Call `generateObject` or `streamObject` with `aiCardSchema` and model settings (`gpt-4o-mini`, `temperature: 1.1`, `maxOutputTokens: 800`)
+5. Validate array length === `count`
+6. Begin Drizzle transaction; insert all cards for `deckId` with `userId`
+7. Revalidate deck detail and study routes
 
 ## Forbidden Patterns
 
@@ -62,7 +65,8 @@ export type AICard = z.infer<typeof aiCardSchema>
 - Missing `userId` filter or ownership checks
 - Bypassing Zod validation or inserting partial data
 - Raw SQL or non-Drizzle DB access
-- Proceeding on < 50 or > 50 generated cards
+- Proceeding on `< count` or `> count` generated cards
+- Allowing `count` outside `[1, 200]`
 
 ## References
 
