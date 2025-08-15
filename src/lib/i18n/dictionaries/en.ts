@@ -31,7 +31,8 @@ export const en: Dictionary = {
   },
   ai: {
     generateAICards: 'Generate AI cards',
-    needTitleDesc: 'Please fill in title and description to use AI generation',
+    needTitleDesc: 'Please fill in title and description to use AI card generation',
+    upgradeToUseAI: 'Upgrade to generate cards with AI',
     dialogTitle: 'Generate AI cards',
     dialogDesc: 'Enter how many cards to generate. Maximum 200.',
     countLabel: 'Count',
@@ -56,6 +57,8 @@ export const en: Dictionary = {
     title: 'Dashboard',
     subtitle: 'Manage your flashcard decks and track your learning progress',
     upgrade: 'Upgrade',
+    upgradeTooltip: 'Upgrade to add more decks',
+    upgradeAria: 'Upgrade to add more decks',
     yourDecks: 'Your Decks',
     deckCountSuffixPlural: 'decks',
     deckCountSuffixSingular: 'deck',

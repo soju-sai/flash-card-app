@@ -8,6 +8,7 @@ import { CreateDeckDialog } from '@/components/CreateDeckDialog';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Trans } from '@/components/Trans';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export default async function DashboardPage() {
   // Check authentication
@@ -50,9 +51,16 @@ export default async function DashboardPage() {
           </div>
           {totalDecks > 0 && (
             reachedFreeLimit ? (
-              <Link href="/pricing">
-                <Button aria-label="Upgrade to create more decks"><Trans k="dashboard.upgrade" /></Button>
-              </Link>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link href="/pricing">
+                    <Button><Trans k="dashboard.upgrade" /></Button>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <Trans k="dashboard.upgradeTooltip" />
+                </TooltipContent>
+              </Tooltip>
             ) : (
               <CreateDeckDialog />
             )
@@ -89,9 +97,16 @@ export default async function DashboardPage() {
                 <h3 className="text-lg font-medium text-gray-900 mb-2"><Trans k="dashboard.emptyTitle" /></h3>
                 <p className="text-gray-600 mb-4"><Trans k="dashboard.emptyDesc" /></p>
                 {reachedFreeLimit ? (
-                  <Link href="/pricing">
-                    <Button aria-label="Upgrade to create decks"><Trans k="dashboard.upgrade" /></Button>
-                  </Link>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href="/pricing">
+                        <Button><Trans k="dashboard.upgrade" /></Button>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <Trans k="dashboard.upgradeTooltip" />
+                    </TooltipContent>
+                  </Tooltip>
                 ) : (
                   <CreateDeckDialog />
                 )}

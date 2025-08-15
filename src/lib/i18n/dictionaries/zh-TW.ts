@@ -31,7 +31,8 @@ export const zhTW: Dictionary = {
   },
   ai: {
     generateAICards: '產生 AI 卡片',
-    needTitleDesc: '請先填寫標題與描述以使用 AI 產生',
+    needTitleDesc: '請先填寫標題與描述以使用 AI 產生卡片',
+    upgradeToUseAI: '升級以使用 AI 產生卡片',
     dialogTitle: '產生 AI 卡片',
     dialogDesc: '輸入要產生的張數。最多 200 張。',
     countLabel: '張數',
@@ -56,6 +57,8 @@ export const zhTW: Dictionary = {
     title: '儀表板',
     subtitle: '管理你的記憶卡組並追蹤學習進度',
     upgrade: '升級',
+    upgradeTooltip: '升級後即可建立更多卡片組',
+    upgradeAria: '升級以建立更多卡片組',
     yourDecks: '你的卡片組',
     deckCountSuffixPlural: '個卡片組',
     deckCountSuffixSingular: '個卡片組',

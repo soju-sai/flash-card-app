@@ -12,7 +12,7 @@ import { DeleteCardButton } from '@/components/DeleteCardButton';
 import { EditDeckDialog } from '@/components/EditDeckDialog';
 import { AddCardDialog } from '@/components/AddCardDialog';
 import { EditCardDialog } from '@/components/EditCardDialog';
-import { ArrowLeft, Play } from 'lucide-react';
+import { ArrowLeft, Play, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { GenerateAICardsDialog } from '@/components/GenerateAICardsDialog';
@@ -115,17 +115,23 @@ export default async function DeckPage({ params }: DeckPageProps) {
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {canUseAI && (
-                <GenerateAICardsDialog
-                  deckId={deck.id}
-                  hasTitle={Boolean(deck.title)}
-                  hasDescription={Boolean(deck.description)}
-                />
-              )}
+              <GenerateAICardsDialog
+                deckId={deck.id}
+                hasTitle={Boolean(deck.title)}
+                hasDescription={Boolean(deck.description)}
+                locked={!canUseAI}
+              />
               <EditDeckDialog deck={deck} />
               <DeleteDeckButton deckId={deck.id} deckTitle={deck.title} />
             </div>
           </div>
+
+          {canUseAI && (!deck.title || !deck.description) && (
+            <p className="mt-2 text-sm text-amber-600 flex items-center gap-2">
+              <Sparkles className="w-4 h-4" />
+              <Trans k="ai.needTitleDesc" />
+            </p>
+          )}
         </div>
 
         {/* Cards Section */}

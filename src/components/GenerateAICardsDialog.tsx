@@ -20,15 +20,18 @@ interface GenerateAICardsDialogProps {
   deckId: number;
   hasTitle: boolean;
   hasDescription: boolean;
+  locked?: boolean;
 }
 
-export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: GenerateAICardsDialogProps) {
+export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription, locked }: GenerateAICardsDialogProps) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number>(50);
   const [error, setError] = useState<string | null>(null);
   const { t } = useI18n();
 
-  const disabledReason = !hasTitle || !hasDescription ? t('ai.needTitleDesc') : undefined;
+  const disabledReason = locked
+    ? t('ai.upgradeToUseAI')
+    : (!hasTitle || !hasDescription ? t('ai.needTitleDesc') : undefined);
 
   const tooltipContent = disabledReason || t('ai.generateAICards');
 
@@ -37,11 +40,17 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <DialogTrigger asChild>
-              <Button variant="outline" aria-label={t('ai.generateAICards')} disabled={Boolean(disabledReason)}>
-                <Sparkles className="w-4 h-4" />
-              </Button>
-            </DialogTrigger>
+            <span className="inline-flex" aria-hidden={false}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  aria-label={t('ai.generateAICards')}
+                  disabled={Boolean(disabledReason)}
+                >
+                  <Sparkles className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+            </span>
           </TooltipTrigger>
           <TooltipContent>
             {tooltipContent}
