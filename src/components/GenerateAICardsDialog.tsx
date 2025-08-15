@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sparkles } from 'lucide-react';
 import { generateAICards } from '@/lib/actions/ai';
 
 interface GenerateAICardsDialogProps {
@@ -29,11 +30,7 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
     ? 'Please fill in title and description to use AI generation'
     : undefined;
 
-  const triggerButton = (
-    <Button aria-label="Generate AI cards" disabled={Boolean(disabledReason)}>
-      Generate AI cards
-    </Button>
-  );
+  const tooltipContent = disabledReason || 'Generate AI cards';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -41,14 +38,14 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              {triggerButton}
+              <Button variant="outline" aria-label="Generate AI cards" disabled={Boolean(disabledReason)}>
+                <Sparkles className="w-4 h-4" />
+              </Button>
             </DialogTrigger>
           </TooltipTrigger>
-          {disabledReason && (
-            <TooltipContent>
-              {disabledReason}
-            </TooltipContent>
-          )}
+          <TooltipContent>
+            {tooltipContent}
+          </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 

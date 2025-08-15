@@ -19,7 +19,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Flash Card App",
+  title: "Flash Card",
   description: "A flash card learning application",
 };
 
@@ -43,7 +43,7 @@ export default function RootLayout({
               <div className="flex justify-between items-center py-6">
                 <div className="flex items-center">
                   <h1 className="text-xl font-semibold">
-                    <Link href="/dashboard">Flash Card App</Link>
+                    <Link href="/dashboard">Flash Card</Link>
                   </h1>
                 </div>
                 <div className="flex items-center space-x-4">
