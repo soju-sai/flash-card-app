@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { decksTable, cardsTable } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import StudyInterface from '@/components/StudyInterface';
+import { Trans } from '@/components/Trans';
 
 interface StudyPageProps {
   params: Promise<{
@@ -65,15 +66,13 @@ export default async function StudyPage({ params }: StudyPageProps) {
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">No Cards to Study</h1>
-          <p className="text-gray-600 mb-6">
-            This deck doesn&apos;t have any cards yet. Add some cards to start studying!
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2"><Trans k="study.noCardsTitle" /></h1>
+          <p className="text-gray-600 mb-6"><Trans k="study.noCardsDesc" /></p>
           <a
             href={`/deck/${deckId}`}
             className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
-            Back to Deck
+            <Trans k="study.backToDeck" />
           </a>
         </div>
       </div>

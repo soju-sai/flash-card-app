@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { createCard } from '@/lib/actions/card';
 import { Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/lib/i18n';
 
 interface AddCardDialogProps {
   deckId: number;
@@ -22,9 +23,10 @@ interface AddCardDialogProps {
 
 export function AddCardDialog({ deckId, trigger }: AddCardDialogProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
 
   const defaultTrigger = (
-    <Button aria-label="Add Card">
+    <Button aria-label={t('dialogs.addCard.tooltip')}>
       <Plus className="w-4 h-4" />
     </Button>
   );
@@ -43,18 +45,14 @@ export function AddCardDialog({ deckId, trigger }: AddCardDialogProps) {
                 {defaultTrigger}
               </DialogTrigger>
             </TooltipTrigger>
-            <TooltipContent>
-              Add Card
-            </TooltipContent>
+            <TooltipContent>{t('dialogs.addCard.tooltip')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Card</DialogTitle>
-          <DialogDescription>
-            Create a new flashcard for this deck.
-          </DialogDescription>
+          <DialogTitle>{t('dialogs.addCard.title')}</DialogTitle>
+          <DialogDescription>{t('dialogs.addCard.desc')}</DialogDescription>
         </DialogHeader>
         <form 
           action={async (formData) => {
@@ -67,38 +65,34 @@ export function AddCardDialog({ deckId, trigger }: AddCardDialogProps) {
           <input type="hidden" name="deckId" value={deckId} />
           
           <div className="space-y-2">
-            <label htmlFor="frontSide" className="text-sm font-medium">
-              Front Side
-            </label>
+            <label htmlFor="frontSide" className="text-sm font-medium">{t('dialogs.addCard.frontLabel')}</label>
             <Textarea
               id="frontSide"
               name="frontSide"
-              placeholder="Enter the question or prompt..."
+              placeholder={t('dialogs.addCard.frontPh')}
               required
               maxLength={1000}
               rows={3}
               className="resize-none"
             />
             <p className="text-xs text-gray-500">
-              What will be shown to the learner initially
+              {t('dialogs.addCard.frontHint')}
             </p>
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="backSide" className="text-sm font-medium">
-              Back Side
-            </label>
+            <label htmlFor="backSide" className="text-sm font-medium">{t('dialogs.addCard.backLabel')}</label>
             <Textarea
               id="backSide"
               name="backSide"
-              placeholder="Enter the answer or explanation..."
+              placeholder={t('dialogs.addCard.backPh')}
               required
               maxLength={1000}
               rows={3}
               className="resize-none"
             />
             <p className="text-xs text-gray-500">
-              What will be revealed when the learner checks the answer
+              {t('dialogs.addCard.backHint')}
             </p>
           </div>
           
@@ -108,9 +102,9 @@ export function AddCardDialog({ deckId, trigger }: AddCardDialogProps) {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t('dialogs.addCard.cancel')}
             </Button>
-            <Button type="submit">Add Card</Button>
+            <Button type="submit">{t('dialogs.addCard.submit')}</Button>
           </div>
         </form>
       </DialogContent>

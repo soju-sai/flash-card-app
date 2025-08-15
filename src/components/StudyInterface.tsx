@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n';
 import { type Card as CardType } from '@/lib/validations/card';
 import { type Deck } from '@/lib/validations/deck';
 
@@ -30,6 +31,7 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
   const [studiedCards, setStudiedCards] = useState<Set<number>>(new Set());
   const [shuffledCards, setShuffledCards] = useState<CardType[]>(cards);
   const [isShuffled, setIsShuffled] = useState(false);
+  const { t } = useI18n();
 
   // Shuffle function
   const shuffleArray = <T,>(array: T[]): T[] => {
@@ -126,20 +128,22 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
           <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-green-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Study Complete!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('studyUI.completeTitle')}</h1>
           <p className="text-gray-600 mb-6">
-            You&apos;ve studied all {shuffledCards.length} cards in &quot;{deck.title}&quot;.
+            {t('studyUI.completeDesc')
+              .replace('{{count}}', String(shuffledCards.length))
+              .replace('{{title}}', deck.title)}
           </p>
           <div className="flex flex-col gap-3">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button onClick={handleReset} className="w-full" aria-label="Study Again">
+                  <Button onClick={handleReset} className="w-full" aria-label={t('studyUI.studyAgain')}>
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Study Again
+                  {t('studyUI.studyAgain')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -147,12 +151,12 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" className="w-full" aria-label="Back to Deck">
+                    <Button variant="outline" className="w-full" aria-label={t('studyUI.backToDeck')}>
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    Back to Deck
+                    {t('studyUI.backToDeck')}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -173,19 +177,19 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link href={`/deck/${deck.id}`}>
-                    <Button variant="outline" size="sm" aria-label="Back">
+                    <Button variant="outline" size="sm" aria-label={t('studyUI.back')}>
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Back
+                  {t('studyUI.back')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <div>
               <h1 className="text-xl font-semibold text-gray-900">{deck.title}</h1>
-              <p className="text-sm text-gray-600">Study Mode</p>
+              <p className="text-sm text-gray-600">{t('studyUI.studyMode')}</p>
             </div>
           </div>
           
@@ -193,24 +197,24 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleShuffle} aria-label={isShuffled ? 'Shuffled' : 'Shuffle'}>
+                  <Button variant="outline" size="sm" onClick={handleShuffle} aria-label={isShuffled ? t('studyUI.shuffled') : t('studyUI.shuffle')}>
                     <Shuffle className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  {isShuffled ? 'Shuffled' : 'Shuffle'}
+                  {isShuffled ? t('studyUI.shuffled') : t('studyUI.shuffle')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleReset} aria-label="Reset">
+                  <Button variant="outline" size="sm" onClick={handleReset} aria-label={t('studyUI.reset')}>
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Reset
+                  {t('studyUI.reset')}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -221,10 +225,12 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">
-              Card {currentIndex + 1} of {shuffledCards.length}
+              {t('studyUI.progressCardOf')
+                .replace('{{n}}', String(currentIndex + 1))
+                .replace('{{total}}', String(shuffledCards.length))}
             </span>
             <span className="text-sm text-gray-600">
-              {studiedCount} studied • {progress}% complete
+              {t('studyUI.progressStudied').replace('{{count}}', String(studiedCount))} • {t('studyUI.progressComplete').replace('{{percent}}', String(progress))}
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
@@ -254,13 +260,11 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
               }`}>
                 <CardContent className="flex items-center justify-center h-full p-8">
                   <div className="text-center space-y-4">
-                    <Badge variant="secondary" className="mb-4">Front</Badge>
+                    <Badge variant="secondary" className="mb-4">{t('studyUI.front')}</Badge>
                     <p className="text-xl font-medium text-gray-900 leading-relaxed">
                       {currentCard.frontSide}
                     </p>
-                    <p className="text-sm text-gray-500 mt-6">
-                      Click to reveal answer
-                    </p>
+                    <p className="text-sm text-gray-500 mt-6">{t('studyUI.clickToReveal')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -272,13 +276,11 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
               style={{ transform: 'rotateY(180deg)' }}>
                 <CardContent className="flex items-center justify-center h-full p-8">
                   <div className="text-center space-y-4">
-                    <Badge variant="secondary" className="mb-4">Back</Badge>
+                    <Badge variant="secondary" className="mb-4">{t('studyUI.backLabel')}</Badge>
                     <p className="text-xl font-medium text-gray-900 leading-relaxed">
                       {currentCard.backSide}
                     </p>
-                    <p className="text-sm text-gray-500 mt-6">
-                      Click to flip back
-                    </p>
+                    <p className="text-sm text-gray-500 mt-6">{t('studyUI.clickToFlipBack')}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -287,7 +289,7 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
             {/* Studied indicator */}
             {studiedCards.has(currentCard.id) && (
               <div className="absolute top-4 right-4 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
-                ✓ Studied
+                {t('studyUI.studiedBadge')}
               </div>
             )}
           </div>
@@ -303,14 +305,12 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
                   onClick={handlePrevious}
                   disabled={currentIndex === 0}
                   size="lg"
-                  aria-label="Previous"
+                  aria-label={t('studyUI.previous')}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Previous
-              </TooltipContent>
+              <TooltipContent>{t('studyUI.previous')}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
@@ -322,7 +322,7 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
                     variant="outline" 
                     onClick={handleFlip}
                     size="lg"
-                    aria-label={isFlipped ? 'Show Front' : 'Show Answer'}
+                    aria-label={isFlipped ? t('studyUI.showFront') : t('studyUI.showAnswer')}
                   >
                     {isFlipped ? (
                       <EyeOff className="w-4 h-4" />
@@ -331,9 +331,7 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  {isFlipped ? 'Show Front' : 'Show Answer'}
-                </TooltipContent>
+                <TooltipContent>{isFlipped ? t('studyUI.showFront') : t('studyUI.showAnswer')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             
@@ -345,14 +343,12 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
                       onClick={handleMarkStudied}
                       size="lg"
                       className="bg-green-600 hover:bg-green-700"
-                      aria-label="Got it!"
+                      aria-label={t('studyUI.gotIt')}
                     >
                       <CheckCircle className="w-4 h-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Got it!
-                  </TooltipContent>
+                  <TooltipContent>{t('studyUI.gotIt')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             )}
@@ -366,23 +362,19 @@ export default function StudyInterface({ deck, cards }: StudyInterfaceProps) {
                   onClick={handleNext}
                   disabled={currentIndex === shuffledCards.length - 1}
                   size="lg"
-                  aria-label="Next"
+                  aria-label={t('studyUI.next')}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Next
-              </TooltipContent>
+              <TooltipContent>{t('studyUI.next')}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         {/* Keyboard shortcuts hint */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-gray-500">
-            Keyboard shortcuts: <strong>Space/Enter</strong> flip • <strong>←→</strong> navigate • <strong>R</strong> reset • <strong>S</strong> shuffle
-          </p>
+          <p className="text-sm text-gray-500">{t('studyUI.keyboardShortcuts')}</p>
         </div>
       </div>
 

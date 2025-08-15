@@ -7,6 +7,7 @@ import { DeckCard } from '@/components/DeckCard';
 import { CreateDeckDialog } from '@/components/CreateDeckDialog';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Trans } from '@/components/Trans';
 
 export default async function DashboardPage() {
   // Check authentication
@@ -44,15 +45,13 @@ export default async function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600 mt-1">
-              Manage your flashcard decks and track your learning progress
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900"><Trans k="dashboard.title" /></h1>
+            <p className="text-gray-600 mt-1"><Trans k="dashboard.subtitle" /></p>
           </div>
           {totalDecks > 0 && (
             reachedFreeLimit ? (
               <Link href="/pricing">
-                <Button aria-label="Upgrade to create more decks">Upgrade</Button>
+                <Button aria-label="Upgrade to create more decks"><Trans k="dashboard.upgrade" /></Button>
               </Link>
             ) : (
               <CreateDeckDialog />
@@ -63,9 +62,9 @@ export default async function DashboardPage() {
         {/* Decks Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">Your Decks</h2>
+            <h2 className="text-xl font-semibold text-gray-900"><Trans k="dashboard.yourDecks" /></h2>
             {totalDecks > 0 && (
-              <span className="text-sm text-gray-500">{totalDecks} deck{totalDecks !== 1 ? 's' : ''}</span>
+              <span className="text-sm text-gray-500">{totalDecks} {totalDecks !== 1 ? <Trans k="dashboard.deckCountSuffixPlural" /> : <Trans k="dashboard.deckCountSuffixSingular" />}</span>
             )}
           </div>
 
@@ -87,15 +86,11 @@ export default async function DashboardPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No decks yet
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Create your first flashcard deck to start learning!
-                </p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2"><Trans k="dashboard.emptyTitle" /></h3>
+                <p className="text-gray-600 mb-4"><Trans k="dashboard.emptyDesc" /></p>
                 {reachedFreeLimit ? (
                   <Link href="/pricing">
-                    <Button aria-label="Upgrade to create decks">Upgrade</Button>
+                    <Button aria-label="Upgrade to create decks"><Trans k="dashboard.upgrade" /></Button>
                   </Link>
                 ) : (
                   <CreateDeckDialog />

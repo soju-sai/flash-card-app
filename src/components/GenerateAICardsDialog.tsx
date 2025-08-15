@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Sparkles } from 'lucide-react';
 import { generateAICards } from '@/lib/actions/ai';
+import { useI18n } from '@/lib/i18n';
 
 interface GenerateAICardsDialogProps {
   deckId: number;
@@ -25,12 +26,11 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState<number>(50);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useI18n();
 
-  const disabledReason = !hasTitle || !hasDescription
-    ? 'Please fill in title and description to use AI generation'
-    : undefined;
+  const disabledReason = !hasTitle || !hasDescription ? t('ai.needTitleDesc') : undefined;
 
-  const tooltipContent = disabledReason || 'Generate AI cards';
+  const tooltipContent = disabledReason || t('ai.generateAICards');
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -38,7 +38,7 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button variant="outline" aria-label="Generate AI cards" disabled={Boolean(disabledReason)}>
+              <Button variant="outline" aria-label={t('ai.generateAICards')} disabled={Boolean(disabledReason)}>
                 <Sparkles className="w-4 h-4" />
               </Button>
             </DialogTrigger>
@@ -51,9 +51,9 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
 
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Generate AI cards</DialogTitle>
+          <DialogTitle>{t('ai.dialogTitle')}</DialogTitle>
           <DialogDescription>
-            Enter how many cards to generate. Maximum 200.
+            {t('ai.dialogDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -76,7 +76,24 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
             } catch (e: unknown) {
               // Log the full error for debugging in browser console
               console.error('generateAICards client catch:', e);
-              const errorMessage = e instanceof Error ? e.message : 'Failed to generate cards';
+              let errorMessage = e instanceof Error ? e.message : t('ai.failed');
+              const map: Array<[RegExp, string]> = [
+                [/Unauthorized/i, 'errors.unauthorized'],
+                [/AI deck feature required/i, 'errors.aiFeatureRequired'],
+                [/Deck not found or not authorized/i, 'errors.deckNotFoundOrNotAuthorized'],
+                [/title and description/i, 'errors.deckTitleAndDescriptionRequired'],
+                [/provider not configured/i, 'errors.aiProviderNotConfigured'],
+                [/quota/i, 'errors.aiQuotaExceeded'],
+                [/Invalid input/i, 'errors.invalidInput'],
+                [/Failed to generate cards/i, 'errors.failedToGenerateCards'],
+                [/AI must return at least/i, 'errors.aiMustReturnAtLeast'],
+              ];
+              for (const [re, key] of map) {
+                if (re.test(errorMessage)) {
+                  errorMessage = t(key);
+                  break;
+                }
+              }
               setError(errorMessage);
             }
           }}
@@ -84,7 +101,7 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
         >
           <input type="hidden" name="deckId" value={deckId} />
           <div className="space-y-2">
-            <label htmlFor="count" className="text-sm font-medium">Count</label>
+            <label htmlFor="count" className="text-sm font-medium">{t('ai.countLabel')}</label>
             <Input
               id="count"
               name="count"
@@ -95,11 +112,11 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription }: Gene
               onChange={(e) => setCount(Number(e.target.value))}
               required
             />
-            <p className="text-xs text-gray-500">Between 1 and 200</p>
+            <p className="text-xs text-gray-500">{t('ai.between')}</p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit">Generate</Button>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
+            <Button type="submit">{t('common.generate')}</Button>
           </div>
         </form>
       </DialogContent>

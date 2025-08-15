@@ -15,9 +15,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { createDeck } from '@/lib/actions/deck';
 import { Plus } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/lib/i18n';
 
 export function CreateDeckDialog() {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -25,22 +27,18 @@ export function CreateDeckDialog() {
         <Tooltip>
           <TooltipTrigger asChild>
             <DialogTrigger asChild>
-              <Button aria-label="Create Deck">
+              <Button aria-label={t('dialogs.createDeck.tooltip')}>
                 <Plus className="w-4 h-4" />
               </Button>
             </DialogTrigger>
           </TooltipTrigger>
-          <TooltipContent>
-            Create Deck
-          </TooltipContent>
+          <TooltipContent>{t('dialogs.createDeck.tooltip')}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Deck</DialogTitle>
-          <DialogDescription>
-            Create a new flashcard deck to start learning.
-          </DialogDescription>
+          <DialogTitle>{t('dialogs.createDeck.title')}</DialogTitle>
+          <DialogDescription>{t('dialogs.createDeck.desc')}</DialogDescription>
         </DialogHeader>
         <form 
           action={async (formData) => {
@@ -50,25 +48,21 @@ export function CreateDeckDialog() {
           className="space-y-4"
         >
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
-              Title
-            </label>
+            <label htmlFor="title" className="text-sm font-medium">{t('dialogs.createDeck.titleLabel')}</label>
             <Input
               id="title"
               name="title"
-              placeholder="Enter deck title"
+              placeholder={t('dialogs.createDeck.titlePh')}
               required
               maxLength={255}
             />
           </div>
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
-              Description (optional)
-            </label>
+            <label htmlFor="description" className="text-sm font-medium">{t('dialogs.createDeck.descLabel')}</label>
             <Textarea
               id="description"
               name="description"
-              placeholder="Enter deck description"
+              placeholder={t('dialogs.createDeck.descPh')}
               maxLength={1000}
               rows={3}
             />
@@ -79,9 +73,9 @@ export function CreateDeckDialog() {
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t('dialogs.createDeck.cancel')}
             </Button>
-            <Button type="submit">Create Deck</Button>
+            <Button type="submit">{t('dialogs.createDeck.submit')}</Button>
           </div>
         </form>
       </DialogContent>

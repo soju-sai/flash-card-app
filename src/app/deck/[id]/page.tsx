@@ -16,6 +16,7 @@ import { ArrowLeft, Play } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { GenerateAICardsDialog } from '@/components/GenerateAICardsDialog';
+import { Trans } from '@/components/Trans';
 
 interface DeckPageProps {
   params: Promise<{
@@ -76,7 +77,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                   </Link>
                 </TooltipTrigger>
                 <TooltipContent>
-                  Back to Dashboard
+                  <Trans k="deckPage.backToDashboard" />
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -89,11 +90,11 @@ export default async function DeckPage({ params }: DeckPageProps) {
                 <p className="text-gray-600">{deck.description}</p>
               )}
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                <span>Created {formatDateHuman(deck.createdAt)}</span>
+                <span><Trans k="deckPage.created" /> {formatDateHuman(deck.createdAt)}</span>
                 <span>•</span>
-                <span>Updated {formatDateHuman(deck.updatedAt)}</span>
+                <span><Trans k="deckPage.updated" /> {formatDateHuman(deck.updatedAt)}</span>
                 <span>•</span>
-                <Badge variant="secondary">{cards.length} cards</Badge>
+                <Badge variant="secondary">{cards.length} <Trans k="deckPage.cards" /></Badge>
               </div>
             </div>
             
@@ -109,7 +110,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                       </Link>
                     </TooltipTrigger>
                     <TooltipContent>
-                      Study
+                      <Trans k="deckPage.study" />
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -130,7 +131,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
         {/* Cards Section */}
         <div className="space-y-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">Cards</h2>
+            <h2 className="text-xl font-semibold text-gray-900"><Trans k="deckPage.cards" /></h2>
             {cards.length > 0 && <AddCardDialog deckId={deck.id} />}
           </div>
 
@@ -152,12 +153,8 @@ export default async function DeckPage({ params }: DeckPageProps) {
                     />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  No cards yet
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Add your first flashcard to start learning!
-                </p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2"><Trans k="deckPage.noCardsTitle" /></h3>
+                <p className="text-gray-600 mb-4"><Trans k="deckPage.noCardsDesc" /></p>
                 <AddCardDialog deckId={deck.id} />
               </div>
             </div>
@@ -168,9 +165,9 @@ export default async function DeckPage({ params }: DeckPageProps) {
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1 flex-1">
-                        <CardTitle className="text-base">Card #{index + 1}</CardTitle>
+                        <CardTitle className="text-base"><Trans k="deckPage.card" /> #{index + 1}</CardTitle>
                         <CardDescription className="text-xs text-gray-500">
-                          Created {formatDateHuman(card.createdAt)}
+                          <Trans k="deckPage.created" /> {formatDateHuman(card.createdAt)}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-1">
@@ -182,13 +179,13 @@ export default async function DeckPage({ params }: DeckPageProps) {
                   <CardContent className="pt-0">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Front</h4>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2"><Trans k="deckPage.front" /></h4>
                         <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
                           <p className="text-gray-900 whitespace-pre-wrap">{card.frontSide}</p>
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-2">Back</h4>
+                        <h4 className="text-sm font-medium text-gray-700 mb-2"><Trans k="deckPage.back" /></h4>
                         <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                           <p className="text-gray-900 whitespace-pre-wrap">{card.backSide}</p>
                         </div>

@@ -1,16 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-import Link from "next/link";
+import { ClientProviders } from "@/components/ClientProviders";
+import { AppHeader } from "@/components/AppHeader";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -35,34 +28,11 @@ export default function RootLayout({
       afterSignOutUrl="/"
     >
       <html lang="en">
-        <body
-          className={`${poppins.variable} antialiased font-sans`}
-        >
-          <header className="border-b border-gray-200 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center py-6">
-                <div className="flex items-center">
-                  <h1 className="text-xl font-semibold">
-                    <Link href="/dashboard">Flash Card</Link>
-                  </h1>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <SignedOut>
-                    <SignInButton>
-                      <Button variant="outline">Sign In</Button>
-                    </SignInButton>
-                    <SignUpButton>
-                      <Button>Sign Up</Button>
-                    </SignUpButton>
-                  </SignedOut>
-                  <SignedIn>
-                    <UserButton />
-                  </SignedIn>
-                </div>
-              </div>
-            </div>
-          </header>
-          {children}
+        <body className={`${poppins.variable} antialiased font-sans`}>
+          <ClientProviders>
+            <AppHeader />
+            {children}
+          </ClientProviders>
         </body>
       </html>
     </ClerkProvider>

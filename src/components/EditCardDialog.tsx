@@ -15,6 +15,7 @@ import { updateCard } from '@/lib/actions/card';
 import { Edit } from 'lucide-react';
 import { Card } from '@/lib/validations/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useI18n } from '@/lib/i18n';
 
 interface EditCardDialogProps {
   card: Card;
@@ -24,9 +25,10 @@ interface EditCardDialogProps {
 
 export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProps) {
   const [open, setOpen] = useState(false);
+  const { t } = useI18n();
 
   const defaultTrigger = (
-    <Button variant="outline" size="sm" aria-label="Edit Card">
+    <Button variant="outline" size="sm" aria-label={t('dialogs.editCard.tooltip')}>
       <Edit className="w-3 h-3" />
     </Button>
   );
@@ -45,18 +47,14 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
                 {defaultTrigger}
               </DialogTrigger>
             </TooltipTrigger>
-            <TooltipContent>
-              Edit Card
-            </TooltipContent>
+            <TooltipContent>{t('dialogs.editCard.tooltip')}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       )}
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Edit Card #{cardNumber}</DialogTitle>
-          <DialogDescription>
-            Update the content of this flashcard.
-          </DialogDescription>
+          <DialogTitle>{t('dialogs.editCard.title').replace('{{n}}', String(cardNumber))}</DialogTitle>
+          <DialogDescription>{t('dialogs.editCard.desc')}</DialogDescription>
         </DialogHeader>
         <form 
           action={async (formData) => {
@@ -69,13 +67,11 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
           <input type="hidden" name="id" value={card.id} />
           
           <div className="space-y-2">
-            <label htmlFor="frontSide" className="text-sm font-medium">
-              Front Side
-            </label>
+            <label htmlFor="frontSide" className="text-sm font-medium">{t('dialogs.editCard.frontLabel')}</label>
             <Textarea
               id="frontSide"
               name="frontSide"
-              placeholder="Enter the question or prompt..."
+              placeholder={t('dialogs.editCard.frontPh')}
               defaultValue={card.frontSide}
               required
               maxLength={1000}
@@ -83,18 +79,16 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
               className="resize-none"
             />
             <p className="text-xs text-gray-500">
-              What will be shown to the learner initially
+              {t('dialogs.editCard.frontHint')}
             </p>
           </div>
           
           <div className="space-y-2">
-            <label htmlFor="backSide" className="text-sm font-medium">
-              Back Side
-            </label>
+            <label htmlFor="backSide" className="text-sm font-medium">{t('dialogs.editCard.backLabel')}</label>
             <Textarea
               id="backSide"
               name="backSide"
-              placeholder="Enter the answer or explanation..."
+              placeholder={t('dialogs.editCard.backPh')}
               defaultValue={card.backSide}
               required
               maxLength={1000}
@@ -102,7 +96,7 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
               className="resize-none"
             />
             <p className="text-xs text-gray-500">
-              What will be revealed when the learner checks the answer
+              {t('dialogs.editCard.backHint')}
             </p>
           </div>
           
@@ -112,9 +106,9 @@ export function EditCardDialog({ card, cardNumber, trigger }: EditCardDialogProp
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              {t('dialogs.editCard.cancel')}
             </Button>
-            <Button type="submit">Update Card</Button>
+            <Button type="submit">{t('dialogs.editCard.submit')}</Button>
           </div>
         </form>
       </DialogContent>
