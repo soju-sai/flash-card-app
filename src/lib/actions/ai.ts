@@ -123,12 +123,12 @@ export async function generateAICards(
     revalidatePath(`/deck/${deckId}`)
     console.log('[generateAICards] revalidated paths for deck', { deckId })
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[generateAICards] error caught', {
       stage,
-      message: error?.message,
-      name: error?.name,
-      status: error?.status ?? error?.response?.status,
+      message: error instanceof Error ? error.message : String(error),
+      name: error instanceof Error ? error.name : 'Unknown',
+      status: (error as { status?: number; response?: { status?: number } })?.status ?? (error as { status?: number; response?: { status?: number } })?.response?.status,
     })
     if (NoObjectGeneratedError.isInstance(error)) {
       console.error('AI generation failed', {
@@ -144,8 +144,8 @@ export async function generateAICards(
       return { success: false, error: 'Invalid input (stage: parse)' }
     }
 
-    const status = error?.status ?? error?.response?.status
-    const message = String(error?.message ?? '')
+    const status = (error as { status?: number; response?: { status?: number } })?.status ?? (error as { status?: number; response?: { status?: number } })?.response?.status
+    const message = error instanceof Error ? error.message : String(error)
     if (status === 429 || /quota|billing|insufficient_quota/i.test(message)) {
       return { success: false, error: 'AI quota exceeded. Please check your plan and billing and try again later.' }
     }
@@ -157,7 +157,7 @@ export async function generateAICards(
       'Deck title and description are required for AI generation',
       'AI provider not configured',
     ])
-    if (typeof error?.message === 'string') {
+    if (error instanceof Error) {
       if (knownMessages.has(error.message) || /AI must return at least/.test(error.message)) {
         return { success: false, error: `${error.message} (stage: ${stage})` }
       }
