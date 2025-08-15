@@ -1,0 +1,107 @@
+---
+alwaysApply: true
+description: Enforce i18n for all user-visible UI strings (pages, elements, dialogs, buttons). Use dictionaries with Trans or t().
+globs: src/**/*.tsx,src/**/*.ts
+---
+
+# I18n — All user-visible UI must be translated
+
+此規則強制：所有「使用者在瀏覽器看得到」的文字，都必須使用專案的 i18n 機制提供翻譯，不可硬編碼在 JSX/TSX 內。
+
+## 必要做法
+
+- **使用 `Trans` 或 `t()` 取得字串**：
+  - Client Component 可使用 `useI18n().t('namespace.key')` 或 `<Trans k="namespace.key" />`。
+  - Dialog/Button/Tooltip/Input placeholder 等可見字串都必須使用翻譯。
+- **字典維護**：新增鍵時，請同時更新 `en` 與 `zh-TW` 兩個字典。
+- **命名規範**：沿用既有命名空間（例如：`common.*`、`dialogs.*`、`dashboard.*`、`deckPage.*`、`studyUI.*`）。新頁面或新模組請新增對應命名空間（例如：`settings.*`）。
+- **禁止硬編碼**：不要在 JSX 中直接寫出可見文字。
+
+## 專案參考
+
+- Provider 與 Hooks：[`src/lib/i18n/provider.tsx`](mdc:src/lib/i18n/provider.tsx), [`src/lib/i18n/index.ts`](mdc:src/lib/i18n/index.ts), [`src/lib/i18n/types.ts`](mdc:src/lib/i18n/types.ts)
+- 字典檔：[`src/lib/i18n/dictionaries/en.ts`](mdc:src/lib/i18n/dictionaries/en.ts), [`src/lib/i18n/dictionaries/zh-TW.ts`](mdc:src/lib/i18n/dictionaries/zh-TW.ts)
+- 元件捷徑：[`src/components/Trans.tsx`](mdc:src/components/Trans.tsx)
+
+## 常見元件範例（shadcn/ui）
+
+### 按鈕文字與 aria-label
+
+```tsx
+import { Button } from '@/components/ui/button';
+import { Trans } from '@/components/Trans';
+import { useI18n } from '@/lib/i18n';
+
+export function SubmitButton() {
+  const { t } = useI18n();
+  return (
+    <Button aria-label={t('common.generate')}>
+      <Trans k="common.generate" />
+    </Button>
+  );
+}
+```
+
+### Dialog 標題與描述
+
+```tsx
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Trans } from '@/components/Trans';
+
+export function ExampleDialog() {
+  return (
+    <Dialog>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle><Trans k="dialogs.createDeck.title" /></DialogTitle>
+          <DialogDescription><Trans k="dialogs.createDeck.desc" /></DialogDescription>
+        </DialogHeader>
+        {/* ... */}
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### Input placeholder/label
+
+```tsx
+import { Input } from '@/components/ui/input';
+import { useI18n } from '@/lib/i18n';
+
+export function TitleInput() {
+  const { t } = useI18n();
+  return (
+    <Input
+      placeholder={t('dialogs.createDeck.titlePh')}
+      aria-label={t('dialogs.createDeck.titleLabel')}
+    />
+  );
+}
+```
+
+### Tooltip/Select/其他可見文字
+
+所有會顯示在畫面上的字串（例如 `tooltip`, `select item`, `badge`, `card` 內容）都必須來自字典鍵值，不可硬編碼。
+
+## 建立新鍵的流程
+
+1. 在 `en.ts` 與 `zh-TW.ts` 加入相同鍵位（字串內容為各語言翻譯）
+2. 在元件中以 `<Trans k="..." />` 或 `t('...')` 使用
+3. 若需要 aria/tooltip/placeholder 等屬性，也一併使用翻譯
+
+## 禁止範例
+
+```tsx
+// ❌ Avoid hardcoded strings in JSX
+<Button>Submit</Button>
+
+// ✅ Use dictionary keys
+<Button><Trans k="common.generate" /></Button>
+```
+
+## 注意
+
+- 本專案的 `t()` 僅回傳對應字串，不支援動態插值。若需要插入變數，請以組合字串與 UI 組件處理。
+- Next.js 的 `metadata` 通常在 Server 端靜態宣告，暫不要求以 i18n 處理；但頁面內所有可見 DOM 文字仍需 i18n。
+

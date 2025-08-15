@@ -1,0 +1,107 @@
+---
+globs: *.ts,*.tsx
+description: Avoid explicit any in TypeScript. Prefer unknown with safe narrowing, proper generics, and schema validation.
+---
+
+## TypeScript — Avoid `any` (Use `unknown`, narrowing, generics, and schemas)
+
+**Goal**: Eliminate `any` to satisfy `@typescript-eslint/no-explicit-any` and improve type safety. Use the patterns below instead of `any`.
+
+### Allowed patterns (preferred alternatives)
+
+- **Use `unknown`, then narrow safely**
+```ts
+// Example: Safe deep access without any
+export function getFromPath(obj: unknown, path: string): string | undefined {
+  const parts = path.split('.');
+  let current: unknown = obj;
+  for (const part of parts) {
+    if (current !== null && typeof current === 'object' && part in (current as Record<string, unknown>)) {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return undefined;
+    }
+  }
+  return typeof current === 'string' ? current : undefined;
+}
+```
+
+- **Index objects via `Record<string, unknown>`**
+```ts
+function readKey(obj: unknown, key: string): unknown {
+  if (obj !== null && typeof obj === 'object' && key in (obj as Record<string, unknown>)) {
+    return (obj as Record<string, unknown>)[key];
+  }
+  return undefined;
+}
+```
+
+- **Prefer generics over `any`**
+```ts
+export function mapValues<T, R>(input: Record<string, T>, fn: (value: T, key: string) => R): Record<string, R> {
+  const out: Record<string, R> = {};
+  for (const [k, v] of Object.entries(input)) out[k] = fn(v as T, k);
+  return out;
+}
+```
+
+- **Validate untyped data (JSON, API) with Zod**
+```ts
+import { z } from 'zod';
+
+const User = z.object({ id: z.string(), name: z.string() });
+
+export function parseUser(jsonText: string) {
+  const data: unknown = JSON.parse(jsonText);
+  return User.parse(data);
+}
+```
+
+- **React Context/Providers must be fully typed**
+```ts
+interface I18nContextValue { locale: 'en' | 'zh-TW'; setLocale: (l: 'en' | 'zh-TW') => void; t: (k: string) => string }
+const Ctx = createContext<I18nContextValue | undefined>(undefined);
+```
+
+- **React events: use concrete event types**
+```ts
+import type { ChangeEvent, MouseEvent } from 'react';
+
+function onInputChange(e: ChangeEvent<HTMLInputElement>) { /* ... */ }
+function onButtonClick(e: MouseEvent<HTMLButtonElement>) { /* ... */ }
+```
+
+- **Recursive dictionaries: prefer precise unions**
+```ts
+export type Dictionary = Record<string, string | Dictionary>;
+```
+
+### Disallowed patterns
+
+- Function parameters or return types declared as `any`
+- Casting to `any` to silence errors (e.g., `as any`)
+- JSON or API responses assigned to `any`
+- React handlers typed as `any` (events or data)
+
+### Migration checklist (replace `any` safely)
+
+1. Replace `any` with `unknown`.
+2. Add runtime type guards: `typeof`, `Array.isArray`, property checks with `in`.
+3. For object indexing, cast to `Record<string, unknown>` and narrow values.
+4. Introduce generics where a reusable type fits.
+5. For external/untyped data, validate with Zod before use.
+6. For React, type context, hooks, and event handlers explicitly.
+
+### Project examples
+
+- See safe path access pattern used in `getFromPath` (ref: [src/lib/i18n/index.tsx](mdc:src/lib/i18n/index.tsx)).
+
+### Lint policy
+
+- Keep `@typescript-eslint/no-explicit-any` enabled.
+- If a third-party limitation temporarily forces `any`, restrict the scope: use a single-line disable with justification and a clear follow-up task, never a file-level disable.
+```ts
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Temporary: upstream type missing; replace when types are available
+type ThirdPartyPayload = any;
+```
+
