@@ -16,6 +16,7 @@ import { ArrowLeft, Play, Sparkles } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { GenerateAICardsDialog } from '@/components/GenerateAICardsDialog';
+import { ImportCSVDialog } from '@/components/ImportCSVDialog';
 import { Trans } from '@/components/Trans';
 
 interface DeckPageProps {
@@ -121,6 +122,7 @@ export default async function DeckPage({ params }: DeckPageProps) {
                 hasDescription={Boolean(deck.description)}
                 locked={!canUseAI}
               />
+              <ImportCSVDialog deckId={deck.id} />
               <EditDeckDialog deck={deck} />
               <DeleteDeckButton deckId={deck.id} deckTitle={deck.title} />
             </div>

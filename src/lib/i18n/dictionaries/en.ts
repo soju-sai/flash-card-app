@@ -49,6 +49,7 @@ export const en: Dictionary = {
     aiMustReturnAtLeast: 'AI must return at least the requested number of cards',
     invalidInput: 'Invalid input',
     failedToGenerateCards: 'Failed to generate cards',
+    csvParseFailed: 'Failed to parse CSV or no valid rows found',
   },
   deck: {
     cardCountSuffix: 'cards',
@@ -165,6 +166,15 @@ export const en: Dictionary = {
       tooltip: 'Delete Card',
       confirm: 'Are you sure you want to delete Card #{{n}}?',
       aria: 'Delete Card',
+    },
+    importCSV: {
+      tooltip: 'Import CSV',
+      title: 'Import from CSV',
+      desc: 'Upload a CSV file with two columns per row: first is Front, second is Back. Lines starting with # are ignored.',
+      fileLabel: 'CSV File',
+      fileHint: 'Only .csv files are accepted. Each row: front,back',
+      cancel: 'Cancel',
+      submit: 'Import',
     },
   }
 };

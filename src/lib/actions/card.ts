@@ -6,6 +6,7 @@ import { cardsTable, decksTable } from '@/db/schema';
 import { createCardSchema, updateCardSchema, deleteCardSchema } from '@/lib/validations/card';
 import { revalidatePath } from 'next/cache';
 import { eq, and } from 'drizzle-orm';
+import { z } from 'zod';
 
 export async function createCard(formData: FormData) {
   // Authentication check
@@ -153,5 +154,83 @@ export async function deleteCard(formData: FormData) {
     revalidatePath(`/deck/${cardWithDeck[0].deckId}`);
   } catch {
     throw new Error('Failed to delete card');
+  }
+}
+
+// CSV import server action
+const importCSVSchema = z.object({
+  deckId: z.number().positive('Invalid deck ID'),
+});
+
+function parseCSVContent(text: string): Array<{ frontSide: string; backSide: string }> {
+  // Simple CSV parser for two-column CSV without quotes; trims whitespace
+  // Lines starting with # are ignored
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0 && !/^\s*#/.test(l));
+  const cards: Array<{ frontSide: string; backSide: string }> = [];
+  for (const line of lines) {
+    const parts = line.split(',');
+    if (parts.length < 2) {
+      // Skip invalid row
+      continue;
+    }
+    const front = parts[0]?.trim() ?? '';
+    const back = parts.slice(1).join(',').trim();
+    if (front.length === 0 || back.length === 0) continue;
+    if (front.length > 1000 || back.length > 1000) continue;
+    cards.push({ frontSide: front, backSide: back });
+  }
+  return cards;
+}
+
+export async function importCardsFromCSV(formData: FormData) {
+  // Authentication check
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error('Unauthorized');
+  }
+
+  // Extract and validate metadata
+  const deckId = Number(formData.get('deckId'));
+  const validated = importCSVSchema.parse({ deckId });
+
+  // Verify deck ownership
+  const deck = await db
+    .select()
+    .from(decksTable)
+    .where(and(eq(decksTable.id, validated.deckId), eq(decksTable.userId, userId)))
+    .limit(1);
+  if (deck.length === 0) {
+    throw new Error('Deck not found or not authorized');
+  }
+
+  // Get file
+  const file = formData.get('file');
+  if (!(file instanceof File)) {
+    throw new Error('Invalid input: CSV file is required');
+  }
+
+  const text = await file.text();
+  const rows = parseCSVContent(text);
+  if (rows.length === 0) {
+    throw new Error('CSV parse failed or no valid rows');
+  }
+
+  // Insert in a transaction
+  try {
+    await db.transaction(async (tx) => {
+      for (const row of rows) {
+        await tx.insert(cardsTable).values({
+          deckId: validated.deckId,
+          frontSide: row.frontSide,
+          backSide: row.backSide,
+        });
+      }
+    });
+    revalidatePath('/dashboard');
+    revalidatePath(`/deck/${validated.deckId}`);
+    return { success: true } as const;
+  } catch (error) {
+    console.error('CSV import failed', error);
+    return { success: false as const, error: 'Failed to import cards from CSV' };
   }
 }

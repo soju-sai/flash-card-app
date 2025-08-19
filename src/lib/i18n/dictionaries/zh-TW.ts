@@ -49,6 +49,7 @@ export const zhTW: Dictionary = {
     aiMustReturnAtLeast: 'AI 產生的卡片數量不足',
     invalidInput: '輸入資料不正確',
     failedToGenerateCards: '產生卡片失敗',
+    csvParseFailed: 'CSV 解析失敗或沒有有效的資料列',
   },
   deck: {
     cardCountSuffix: '張卡片',
@@ -165,6 +166,15 @@ export const zhTW: Dictionary = {
       tooltip: '刪除卡片',
       confirm: '確定要刪除卡片 #{{n}} 嗎？',
       aria: '刪除卡片',
+    },
+    importCSV: {
+      tooltip: '匯入 CSV',
+      title: '從 CSV 匯入',
+      desc: '上傳 CSV 檔案，每列兩欄：第一欄為正面，第二欄為背面。以 # 開頭的行會被忽略。',
+      fileLabel: 'CSV 檔案',
+      fileHint: '僅接受 .csv 檔案。每列格式：front,back',
+      cancel: '取消',
+      submit: '匯入',
     },
   }
 };
