@@ -215,17 +215,15 @@ export async function importCardsFromCSV(formData: FormData) {
     throw new Error('CSV parse failed or no valid rows');
   }
 
-  // Insert in a transaction
+  // Insert rows (Neon HTTP driver does not support transactions)
   try {
-    await db.transaction(async (tx) => {
-      for (const row of rows) {
-        await tx.insert(cardsTable).values({
-          deckId: validated.deckId,
-          frontSide: row.frontSide,
-          backSide: row.backSide,
-        });
-      }
-    });
+    await db.insert(cardsTable).values(
+      rows.map((row) => ({
+        deckId: validated.deckId,
+        frontSide: row.frontSide,
+        backSide: row.backSide,
+      }))
+    );
     revalidatePath('/dashboard');
     revalidatePath(`/deck/${validated.deckId}`);
     return { success: true } as const;
