@@ -12,7 +12,7 @@ import { aiCardSchema } from '@/lib/validations/ai'
 
 const requestSchema = z.object({
   deckId: z.number().positive('Invalid deck ID'),
-  count: z.number().min(1).max(200),
+  count: z.number().min(1).max(20),
 })
 
 export async function generateAICards(

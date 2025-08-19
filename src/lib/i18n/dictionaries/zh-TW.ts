@@ -34,9 +34,9 @@ export const zhTW: Dictionary = {
     needTitleDesc: '請先填寫標題與描述以使用 AI 產生卡片',
     upgradeToUseAI: '升級以使用 AI 產生卡片',
     dialogTitle: '產生 AI 卡片',
-    dialogDesc: '輸入要產生的張數。最多 200 張。',
+    dialogDesc: '輸入要產生的張數。最多 20 張。',
     countLabel: '張數',
-    between: '介於 1 到 200',
+    between: '介於 1 到 20',
     failed: '產生卡片失敗',
   },
   errors: {

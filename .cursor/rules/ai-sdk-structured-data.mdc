@@ -65,8 +65,8 @@ export async function generateCards({
   count: number
 }) {
   try {
-    if (!Number.isFinite(count) || count < 1 || count > 200) {
-      throw new Error('Count must be between 1 and 200')
+    if (!Number.isFinite(count) || count < 1 || count > 20) {
+      throw new Error('Count must be between 1 and 20')
     }
     const { object: cards } = await generateObject({
       model: openai('gpt-4o-mini'),
@@ -121,8 +121,8 @@ const cardSchema = z.object({
 })
 
 export async function streamCards(title: string, description: string, count: number) {
-  if (!Number.isFinite(count) || count < 1 || count > 200) {
-    throw new Error('Count must be between 1 and 200')
+  if (!Number.isFinite(count) || count < 1 || count > 20) {
+    throw new Error('Count must be between 1 and 20')
   }
 
   const { elementStream } = streamObject({

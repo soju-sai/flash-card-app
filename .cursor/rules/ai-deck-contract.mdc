@@ -11,7 +11,7 @@ This contract defines the mandatory behavior for the AI Deck feature. It complem
 ## Functional Requirements
 
 - Generate a user-specified number of cards per AI Deck request
-  - `count` must be between 1 and 200 (inclusive)
+  - `count` must be between 1 and 20 (inclusive)
 - Each card contains:
   - `frontSide`: concise prompt/question/term (1–280 chars)
   - `backSide`: clear answer/explanation (1–2000 chars)
@@ -39,7 +39,7 @@ export type AICard = z.infer<typeof aiCardSchema>
 - Enforce user data isolation (scoped by `userId`)
 - Use Vercel AI SDK (`generateObject` or `streamObject`) with the Zod schema
 - Model and settings: `openai('gpt-4o-mini')`, `temperature: 1.1`, `maxOutputTokens: 800`
-- Validate the result and ensure length === `count` (where `1 ≤ count ≤ 200`) before any DB writes
+- Validate the result and ensure length === `count` (where `1 ≤ count ≤ 20`) before any DB writes
 - Insert cards using Drizzle in a transaction, linked to the target deck and `userId`
 - Revalidate relevant paths after mutation (e.g., `/decks/[id]`)
 
@@ -53,7 +53,7 @@ export type AICard = z.infer<typeof aiCardSchema>
 
 1. Server Action receives `deckId`, `title`, `description`, `count`
 2. AuthN/AuthZ check with Clerk; verify `ai_deck` feature
-3. Guardrail: ensure `1 ≤ count ≤ 200`
+3. Guardrail: ensure `1 ≤ count ≤ 20`
 4. Call `generateObject` or `streamObject` with `aiCardSchema` and model settings (`gpt-4o-mini`, `temperature: 1.1`, `maxOutputTokens: 800`)
 5. Validate array length === `count`
 6. Begin Drizzle transaction; insert all cards for `deckId` with `userId`
@@ -66,7 +66,7 @@ export type AICard = z.infer<typeof aiCardSchema>
 - Bypassing Zod validation or inserting partial data
 - Raw SQL or non-Drizzle DB access
 - Proceeding on `< count` or `> count` generated cards
-- Allowing `count` outside `[1, 200]`
+- Allowing `count` outside `[1, 20]`
 
 ## References
 

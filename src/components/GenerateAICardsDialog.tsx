@@ -25,7 +25,7 @@ interface GenerateAICardsDialogProps {
 
 export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription, locked }: GenerateAICardsDialogProps) {
   const [open, setOpen] = useState(false);
-  const [count, setCount] = useState<number>(50);
+  const [count, setCount] = useState<number>(10);
   const [error, setError] = useState<string | null>(null);
   const { t } = useI18n();
 
@@ -116,7 +116,7 @@ export function GenerateAICardsDialog({ deckId, hasTitle, hasDescription, locked
               name="count"
               type="number"
               min={1}
-              max={200}
+              max={20}
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
               required
