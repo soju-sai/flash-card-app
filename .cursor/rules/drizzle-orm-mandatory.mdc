@@ -42,9 +42,11 @@ import { decksTable, cardsTable } from '@/db/schema';
 - ✅ **ALWAYS USE**: Drizzle's query builder with `.leftJoin()`, `.where()`, `.orderBy()`, etc.
 - ❌ **NEVER USE**: Raw SQL with JOINs
 
-### 6. Transactions
-- ✅ **ALWAYS USE**: `db.transaction(async (tx) => { ... })`
-- ❌ **NEVER USE**: Manual transaction handling
+### 6. Transactions (Neon HTTP driver caveat)
+- ✅ **PREFERRED**: Use single-statement operations that are atomic by themselves (e.g., multi-row insert in one `insert ... values([...])`).
+- ✅ **WHEN NEEDED**: Design idempotent steps with application-level compensation/retry instead of DB transactions.
+- ❌ **DO NOT USE**: `db.transaction(...)` on the Neon HTTP driver (transactions are not supported).
+- ℹ️ If switching to a driver that supports transactions, you may use `db.transaction(...)`, but never implement manual transaction handling.
 
 ## Available Tables
 
